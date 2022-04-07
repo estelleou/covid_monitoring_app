@@ -9,10 +9,12 @@ library(gridExtra)
 library(wesanderson)
 library(viridis)
 library(grid)
+library(directlabels)
 library(RColorBrewer)
 library(shinythemes)
 
 source("D:/Estelle/Rscripts/estelle_theme.R")
+
 #load in cleaned data that's updated once a day on a cron-----------------------
 
 load("cleaned_data/cntry_cleaned_covid.rda")
@@ -120,81 +122,118 @@ server <- function(input, output) {
   
   #regional charts ----------------------------------------------------------
   last_region <- reactive({
-    region_covid_data %>% 
-    filter(!is.na(continent)) %>% 
-    filter(continent != "Oceania") %>% 
-    filter(date == today()-1) 
+    region_covid_data %>%
+    filter(!is.na(continent)) %>%
+    filter(continent != "Oceania") %>%
+    filter(date == today()-1)
       })
-  
-  regional_chart_theme <- 
-  
+
   regional_covid_cases <- reactive({
-    
-      region_covid_data %>% 
-      filter(!is.na(continent)) %>% 
+
+      region_covid_data %>%
+      filter(!is.na(continent)) %>%
       filter(date > "2020-01-31") %>%
-      select(date,continent, new_cases_avg_per_pop) %>% 
-      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>% 
+      select(date,continent, new_cases_avg_per_pop) %>%
+      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
       filter(continent != "Oceania") %>%
       ggplot() +
-      geom_line(aes(x = date, y = new_cases_avg_per_pop, color = continent), size = 1.5) +
-      geom_text(data= last_region(),
-                aes(x = date, y = new_cases_avg_per_pop,label=continent, color = continent),
-                position=position_nudge(10), hjust=0, show.legend=TRUE,
-                size = 5) +
-      labs(x = "", y = "", 
+      geom_line(aes(x = date, y = new_cases_avg_per_pop, color = continent), size = 1.2) +
+      geom_dl(data = last_region(),
+              aes(x = date, y = new_cases_avg_per_pop, color = continent, label = continent),
+              method = list('last.bumpup', cex = 1.2, hjust = 0, 
+                            vjust = 1, fontface = "bold"))+
+      labs(x = "", y = "",
            title= "Daily New Covid Cases per million (7-day avg.)",
            subtitle = paste0("As of ", today()-1)) +
       scale_x_date(lim = c(as.Date("2020-02-15"),
-                           as.Date(max(last_region()$date))+130),
+                           as.Date(max(last_region()$date))),
                    date_label = "%b %y",
                    date_breaks = "3 months" ) +
       estelle_theme()+
-      scale_color_brewer(palette = "Set2")+
-      theme(plot.margin = margin(0.1, 0.2, 0.1, 0.1, "cm"), 
+      scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
+                                     "#cc9900", "#006633"))+
+      theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
             plot.title = element_text(size = 20, vjust = -1, color = "black"),
             plot.subtitle = element_text(size = 20),
-            legend.position = "none")
-      
-      }) 
-  
+            legend.position = "none")+
+      coord_cartesian(clip = "off")
+
+      })
+
   regional_covid_deaths <- reactive({
-    
-    region_covid_data %>% 
-      filter(!is.na(continent)) %>% 
+
+    region_covid_data %>%
+      filter(!is.na(continent)) %>%
       filter(date > "2020-01-31") %>%
-      select(date,continent, new_deaths_avg_per_pop) %>% 
-      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>% 
+      select(date,continent, new_deaths_avg_per_pop) %>%
+      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
       filter(continent != "Oceania") %>%
       ggplot() +
-      geom_line(aes(x = date, y = new_deaths_avg_per_pop, color = continent), size = 1.5) +
-      geom_text(data= last_region(),
-                aes(x = date, y = new_deaths_avg_per_pop,label=continent, color = continent),
-                position=position_nudge(10), hjust=0, show.legend=TRUE,
-                size = 5) +
-      labs(x = "", y = "", 
+      geom_line(aes(x = date, y = new_deaths_avg_per_pop, color = continent), size = 1.2) +
+      geom_dl(data = last_region(),
+              aes(x = date, y = new_deaths_avg_per_pop, color = continent, label = continent),
+              method = list('last.bumpup', cex = 1.2, hjust = 0, 
+                            vjust = 1, fontface = "bold"))+
+      labs(x = "", y = "",
            title= "Daily New Covid Deaths per million (7-day avg.)",
            subtitle = paste0("As of ", today()-1)) +
       scale_x_date(lim = c(as.Date("2020-02-15"),
-                           as.Date(max(last_region()$date))+130),
+                           as.Date(max(last_region()$date))),
                    date_label = "%b %y",
                    date_breaks = "3 months" ) +
       estelle_theme()+
-      scale_color_brewer(palette = "Set2")+
-      theme(plot.margin = margin(0.1, 0.2, 0.1, 0.1, "cm"), 
+      scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
+                                     "#cc9900", "#006633"))+
+      theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
             plot.title = element_text(size = 20, vjust = -1, color = "black"),
             plot.subtitle = element_text(size = 20),
-            legend.position = "none")
-    
-  }) 
-  
+            legend.position = "none")+
+      coord_cartesian(clip = "off")
+
+  })
+
   output$regional_ts <- renderPlot({
-    
+
     grid.arrange(regional_covid_cases(), regional_covid_deaths(),
                  nrow = 1)
-    
+
      })
+  
+  
+  #country covid case and death ranking bars by region ------------------------
+  
+  output$covid_rankings <- renderPlot({
+
+    if (input$region =="em") {
+
+      grid.arrange(top_5_country_ranked_by_cases(em), top_5_country_ranked_by_deaths(em),
+                   nrow = 1)
+
+    } else if (input$region == "dm") {
+
+      grid.arrange(top_5_country_ranked_by_cases(dm), top_5_country_ranked_by_deaths(dm),
+                   nrow = 1)
+
+    } else if (input$region == "latam") {
+
+      grid.arrange(top_5_country_ranked_by_cases(latam), top_5_country_ranked_by_deaths(latam),
+                   nrow = 1)
+    } else if (input$region == "asia") {
+
+      grid.arrange(top_5_country_ranked_by_cases(asia), top_5_country_ranked_by_deaths(asia),
+                   nrow = 1)
+
+    } else {
+
+      grid.arrange(top_5_country_ranked_by_cases(eu), top_5_country_ranked_by_deaths(eu),
+                   nrow = 1)
+
+    }
+
+  })
+  
 }
+      
 
 ui <- source("ui.R")
 # Create Shiny app ----

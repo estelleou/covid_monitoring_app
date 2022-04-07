@@ -101,8 +101,8 @@ save(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increa
   arrange(date) %>% 
   ungroup() %>% 
   group_by(continent) %>% 
-  mutate( new_cases_avg = rollmean(new_cases, k= 7, align = "right", fill = NA)) %>% 
-  mutate( new_deaths_avg = rollmean(new_deaths, k= 7, align = "right", fill = NA)) 
+  mutate(new_cases_avg = rollmean(new_cases, k= 7, align = "right", fill = NA)) %>% 
+  mutate(new_deaths_avg = rollmean(new_deaths, k= 7, align = "right", fill = NA)) 
 
 #regional population data ----------------------------------------------------
 region_pop <-

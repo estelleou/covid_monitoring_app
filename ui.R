@@ -27,7 +27,7 @@ shinyUI(fluidPage(
       # Output: Hotspots and Regional----
       h1("Covid Hotspots For the Week"),
       plotOutput(outputId = "hotspots", width = "1600px", height = "850px"),
-      br(),
+     # br(),
       h1("Regional Covid and Death Levels"),
       plotOutput(outputId = "regional_ts", width = "1600px", height = "550px"),
       width = 11,
@@ -43,10 +43,10 @@ shinyUI(fluidPage(
       
       # Input: Slider for the number of bins ----
       selectInput(inputId = "region",
-                  label = "Regional",
+                  label = "Region",
                   list(`Emerging Markets` = "em", `Developed Markets` = "dm",
                        `Latin America` = "latam", `European Union` = "eu",
-                       `Asia` = "asia", `Global` = 'global')
+                       `Asia` = "asia")
       ),
       width = 1,
       height = 1
@@ -56,9 +56,8 @@ shinyUI(fluidPage(
     mainPanel(
       
       # Output: Country level by region----
-      h1("Country Covid Time-Series Data"),
-     
-      
+      h1("Top 5 Countries with the Current Highest Cases/Deaths Per Capita within the Region"),
+      plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
       width = 11,
     )
   )
