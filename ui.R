@@ -36,6 +36,7 @@ shinyUI(fluidPage(
    
     ),
   
+  #Country Level Cases and Death Charts ---------------------------------
   sidebarLayout(
     
     # Sidebar panel for inputs ----
@@ -56,11 +57,40 @@ shinyUI(fluidPage(
     mainPanel(
       
       # Output: Country level by region----
-      h1("Top 5 Countries with the Current Highest Cases/Deaths Per Capita within the Region"),
+      h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within the Region"),
+      plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
+      width = 11,
+    )
+  ),
+  
+  #REgional Average mobility charts ------------------------------------
+  sidebarLayout(
+    
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+      
+      # Input: Slider for the number of bins ----
+      selectInput(inputId = "region",
+                  label = "Region",
+                  list(`Emerging Markets` = "em", `Developed Markets` = "dm",
+                       `Latin America` = "latam", `European Union` = "eu",
+                       `Asia` = "asia")
+      ),
+      width = 1,
+      height = 1
+      
+    ),
+    # Main panel for displaying outputs ----
+    mainPanel(
+      
+      # Output: Country level by region----
+      h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within the Region"),
       plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
       width = 11,
     )
   )
+  
+  
   
   
   

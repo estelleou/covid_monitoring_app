@@ -6,6 +6,7 @@ hotspot <- function(region, ranking_type) {
     
     hotspot <- 
       increases_in_deaths_and_cases_within_this_week %>%
+      filter(date == last(date)) %>%  
       arrange(desc(avg_chg_weeklydeaths)) 
     
     if (region == "global") {
@@ -25,6 +26,7 @@ hotspot <- function(region, ranking_type) {
     
     hotspot <- 
       increases_in_deaths_and_cases_within_this_week %>%
+      filter(date == last(date)) %>%  
       arrange(desc(avg_chg_weeklycases)) 
     
     if (region == "global") {
@@ -209,4 +211,96 @@ top_5_country_ranked_by_deaths <- function(region){
           legend.position = "none") +
     coord_cartesian(clip = "off")
   
+}
+
+
+#average mobility charts with dynamic colors for when cases are increasing 
+
+#cleaning for label position --------------
+ranked_data <- 
+  cntry_cleaned_mobility %>% 
+  filter(country == "Germany") %>% 
+  filter(date == last(date)) %>% 
+  group_by(roll_index,country) %>%
+  arrange(roll_index) %>%
+  ungroup()
+
+ranked_list <- 
+  unique(ranked_data$country)
+# -----------------------------------------
+
+
+
+ mobility_case_chart<- function(data, country_name) {
+  
+     
+  mobility_and_case_speed_data <- 
+     data %>% 
+    mutate(x_axis_date = update(date, year = 1)) %>% 
+    mutate(roll_index = 100+roll_index) %>% 
+    left_join(increases_in_deaths_and_cases_within_this_week)
+    
+  
+  acceleration <- 
+    mobility_and_case_speed_data %>% 
+    select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
+    mutate(roll_index = ifelse(avg_chg_weeklycases>=0, roll_index, 0))
+  
+  deceleration <- 
+    mobility_and_case_speed_data %>% 
+    select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
+    mutate(roll_index = ifelse(avg_chg_weeklycases<=0, roll_index, 0))
+    
+  #reference values for y-axis
+  y_axis_min_max_reference_data <- 
+    cntry_cleaned_mobility %>% 
+    filter(country == country_name) %>% 
+    filter(!is.na(roll_index)) %>% 
+    mutate(roll_index = 100+roll_index) %>% 
+    select(roll_index)
+  
+  
+    ggplot()+
+    geom_line(data = acceleration, aes(x = x_axis_date, y = roll_index), 
+              color = "#cc9900", size = 1.5) +
+    geom_line(data = deceleration, aes(x = x_axis_date, y = roll_index),
+              color = "#778088", size = 1.5) +
+    scale_x_date(lim = c(as.Date("0000-12-31"), as.Date("0001-12-31")),
+                 date_label = "%b", 
+                 date_breaks = "2 months") +
+    geom_hline(yintercept = 100, linetype = 2)+
+    theme_classic() +
+    labs(x = "", 
+         y = "") +
+    scale_y_continuous(lim = c(min(y_axis_min_max_reference_data$roll_index), 
+                               max(y_axis_min_max_reference_data$roll_index)))+
+    estelle_theme() +
+    theme(plot.margin = margin(0.2, 0.5, 0.5, 0.5, "cm"), 
+          plot.title = element_text(size = 15, vjust = -1, color = "black"),
+          plot.subtitle = element_text(size = 15), 
+          axis.text = element_text(size = 15))
+ }
+ 
+ 
+mobility_throughout_the_years <-  function(country_name) {
+  
+
+year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
+                            filter(country == country_name) %>% 
+                            filter(date < "2021-01-01"), country_name)
+
+year_2 <- mobility_case_chart(cntry_cleaned_mobility %>%
+                              filter(country == country_name) %>% 
+                              filter(date >= "2021-01-01") %>% 
+                              filter(date < "2022-01-01"), country_name )
+
+
+year_3<- mobility_case_chart(cntry_cleaned_mobility %>%
+                              filter(country == country_name) %>% 
+                              filter(date >= "2022-01-01") %>% 
+                              filter(date < "2023-01-01"), country_name ) 
+  
+
+grid.arrange(year_3, year_2, year_1, nrow = 3)
+
 }

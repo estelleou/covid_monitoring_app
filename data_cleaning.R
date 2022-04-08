@@ -70,11 +70,10 @@ save(cntry_cleaned_covid, file = "cleaned_data/cntry_cleaned_covid.rda")
 increases_in_deaths_and_cases_within_this_week <- 
   cntry_cleaned_covid %>% 
   group_by(country) %>% 
-  mutate(change_7day_avg_new_cases_per_pop = new_cases_avg_per_pop-lag(new_cases_avg_per_pop),
-         change_7day_avg_new_deaths_per_pop = new_deaths_avg_per_pop-lag(new_deaths_avg_per_pop),
+  mutate(change_7day_avg_new_cases_per_pop = new_cases_avg_per_pop-lag(new_cases_avg_per_pop,1),
+         change_7day_avg_new_deaths_per_pop = new_deaths_avg_per_pop-lag(new_deaths_avg_per_pop,1),
          avg_chg_weeklycases = rollmean(change_7day_avg_new_cases_per_pop, k = 14, align = "right", fill = NA),
          avg_chg_weeklydeaths = rollmean(change_7day_avg_new_deaths_per_pop, k = 14, align = "right", fill = NA),) %>% 
-  filter(date == last(date)) %>%  
   ungroup() 
 
 save(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increases_in_deaths_and_cases_within_this_week.rda")

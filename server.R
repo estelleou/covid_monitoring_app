@@ -15,6 +15,9 @@ library(shinythemes)
 
 source("D:/Estelle/Rscripts/estelle_theme.R")
 
+##!!!!!!!!!!! put this on a cron when done !!!!#######
+source("D:/Estelle/Rscripts/covid_monitoring_app/data_cleaning.R")
+
 #load in cleaned data that's updated once a day on a cron-----------------------
 
 load("cleaned_data/cntry_cleaned_covid.rda")
