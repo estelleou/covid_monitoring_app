@@ -205,7 +205,7 @@ top_5_country_ranked_by_deaths <- function(region){
     estelle_theme()+
     scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
                                    "#cc9900", "#006633"))+
-    theme(plot.margin = margin(0.1, 3, 0.1, 0, "cm"), 
+    theme(plot.margin = margin(0.1, 3, 0, 0, "cm"), 
           plot.title = element_text(size = 20, vjust = -1, color = "black"),
           plot.subtitle = element_text(size = 20),
           legend.position = "none") +
@@ -215,21 +215,6 @@ top_5_country_ranked_by_deaths <- function(region){
 
 
 #average mobility charts with dynamic colors for when cases are increasing 
-
-#cleaning for label position --------------
-ranked_data <- 
-  cntry_cleaned_mobility %>% 
-  filter(country == "Germany") %>% 
-  filter(date == last(date)) %>% 
-  group_by(roll_index,country) %>%
-  arrange(roll_index) %>%
-  ungroup()
-
-ranked_list <- 
-  unique(ranked_data$country)
-# -----------------------------------------
-
-
 
  mobility_case_chart<- function(data, country_name) {
   
@@ -244,12 +229,12 @@ ranked_list <-
   acceleration <- 
     mobility_and_case_speed_data %>% 
     select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
-    mutate(roll_index = ifelse(avg_chg_weeklycases>=0, roll_index, 0))
+    mutate(roll_index_1 = ifelse(avg_chg_weeklycases>=0, roll_index, 0))
   
   deceleration <- 
     mobility_and_case_speed_data %>% 
     select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
-    mutate(roll_index = ifelse(avg_chg_weeklycases<=0, roll_index, 0))
+    mutate(roll_index_2 = ifelse(avg_chg_weeklycases<=0, roll_index, 0))
     
   #reference values for y-axis
   y_axis_min_max_reference_data <- 
@@ -261,46 +246,28 @@ ranked_list <-
   
   
     ggplot()+
-    geom_line(data = acceleration, aes(x = x_axis_date, y = roll_index), 
-              color = "#cc9900", size = 1.5) +
-    geom_line(data = deceleration, aes(x = x_axis_date, y = roll_index),
+    geom_line(data = acceleration, aes(x = x_axis_date, y = roll_index_1), 
+              color = "#ff3300", size = 1.5) +
+    geom_line(data = deceleration, aes(x = x_axis_date, y = roll_index_2),
               color = "#778088", size = 1.5) +
+    geom_line(data = deceleration, aes(x = x_axis_date, y = roll_index),
+                color = "#778088", size = 1.5, alpha = 0.4) +
     scale_x_date(lim = c(as.Date("0000-12-31"), as.Date("0001-12-31")),
                  date_label = "%b", 
                  date_breaks = "2 months") +
-    geom_hline(yintercept = 100, linetype = 2)+
+    geom_hline(yintercept = 100, linetype = 2) +
     theme_classic() +
-    labs(x = "", 
+    labs(x = paste0(year(mobility_and_case_speed_data$date)), 
          y = "") +
     scale_y_continuous(lim = c(min(y_axis_min_max_reference_data$roll_index), 
-                               max(y_axis_min_max_reference_data$roll_index)))+
+                               ifelse(max(y_axis_min_max_reference_data$roll_index)>100,
+                                      max(y_axis_min_max_reference_data$roll_index), 101)))+
     estelle_theme() +
     theme(plot.margin = margin(0.2, 0.5, 0.5, 0.5, "cm"), 
           plot.title = element_text(size = 15, vjust = -1, color = "black"),
           plot.subtitle = element_text(size = 15), 
-          axis.text = element_text(size = 15))
+          axis.text = element_text(size = 15), 
+          axis.title = element_text(size = 15))
  }
  
  
-mobility_throughout_the_years <-  function(country_name) {
-  
-
-year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
-                            filter(country == country_name) %>% 
-                            filter(date < "2021-01-01"), country_name)
-
-year_2 <- mobility_case_chart(cntry_cleaned_mobility %>%
-                              filter(country == country_name) %>% 
-                              filter(date >= "2021-01-01") %>% 
-                              filter(date < "2022-01-01"), country_name )
-
-
-year_3<- mobility_case_chart(cntry_cleaned_mobility %>%
-                              filter(country == country_name) %>% 
-                              filter(date >= "2022-01-01") %>% 
-                              filter(date < "2023-01-01"), country_name ) 
-  
-
-grid.arrange(year_3, year_2, year_1, nrow = 3)
-
-}

@@ -235,9 +235,45 @@ server <- function(input, output) {
 
   })
   
+  #mobility average charts
+  
+  
+  output$mobility_throughout_the_years <-  renderPlot({
+    
+    
+    year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
+                                    filter(country == input$country) %>% 
+                                    filter(date < "2021-01-01"), input$country)
+    
+    year_2 <- mobility_case_chart(cntry_cleaned_mobility %>%
+                                    filter(country == input$country) %>% 
+                                    filter(date >= "2021-01-01") %>% 
+                                    filter(date < "2022-01-01"), input$country)
+    
+    
+    year_3<- mobility_case_chart(cntry_cleaned_mobility %>%
+                                   filter(country == input$country) %>% 
+                                   filter(date >= "2022-01-01") %>% 
+                                   filter(date < "2023-01-01"), input$country)
+    
+    
+    grid.arrange(year_3, year_2, year_1, 
+                 nrow = 3, 
+                 top = textGrob(paste0("As of ", format(max(cntry_cleaned_mobility$date), "%b-%d \nRed refers to when cases are on the rise, Grey refers to when cases are declining")),
+                                gp = gpar(fontface = 4, fontsize = 15,
+                                          hjust = 1)),
+                 bottom = textGrob(
+                   "Source: JHU and Google Mobility Data",
+                   gp = gpar(fontface = 3, fontsize = 10), 
+                   hjust = -0.5
+                 ))
+    
+  })
+  
 }
       
-
+country_list <- as.list(unique(cntry_cleaned_mobility$country))
 ui <- source("ui.R")
 # Create Shiny app ----
 shinyApp(ui = ui, server = server)
+

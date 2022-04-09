@@ -32,8 +32,6 @@ shinyUI(fluidPage(
       plotOutput(outputId = "regional_ts", width = "1600px", height = "550px"),
       width = 11,
      )
-    
-   
     ),
   
   #Country Level Cases and Death Charts ---------------------------------
@@ -49,7 +47,7 @@ shinyUI(fluidPage(
                        `Latin America` = "latam", `European Union` = "eu",
                        `Asia` = "asia")
       ),
-      width = 1,
+      width = 2,
       height = 1
       
     ),
@@ -59,40 +57,35 @@ shinyUI(fluidPage(
       # Output: Country level by region----
       h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within the Region"),
       plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
-      width = 11,
+      width = 10,
     )
   ),
   
-  #REgional Average mobility charts ------------------------------------
+  
+  # # #REgional Average mobility charts ------------------------------------
   sidebarLayout(
-    
+
     # Sidebar panel for inputs ----
     sidebarPanel(
-      
+
       # Input: Slider for the number of bins ----
-      selectInput(inputId = "region",
-                  label = "Region",
-                  list(`Emerging Markets` = "em", `Developed Markets` = "dm",
-                       `Latin America` = "latam", `European Union` = "eu",
-                       `Asia` = "asia")
+      selectInput(inputId = "country",
+                  label = "Country",
+                  country_list
       ),
-      width = 1,
+      width = 2,
       height = 1
-      
+
     ),
     # Main panel for displaying outputs ----
     mainPanel(
-      
+
       # Output: Country level by region----
-      h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within the Region"),
-      plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
-      width = 11,
+      h1(" Average Mobility as % of Jan-Feb 2020 levels"),
+      plotOutput(outputId = "mobility_throughout_the_years", width = "800px", height = "550px"),
+      width = 10,
+        )
     )
-  )
   
-  
-  
-  
-  
-  )
+)
 )
