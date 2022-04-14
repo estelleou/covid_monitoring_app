@@ -258,16 +258,66 @@ top_5_country_ranked_by_deaths <- function(region){
     geom_hline(yintercept = 100, linetype = 2) +
     theme_classic() +
     labs(x = paste0(year(mobility_and_case_speed_data$date)), 
-         y = "") +
+         y = "")+
     scale_y_continuous(lim = c(min(y_axis_min_max_reference_data$roll_index), 
                                ifelse(max(y_axis_min_max_reference_data$roll_index)>100,
                                       max(y_axis_min_max_reference_data$roll_index), 101)))+
     estelle_theme() +
-    theme(plot.margin = margin(0.2, 0.5, 0.5, 0.5, "cm"), 
-          plot.title = element_text(size = 15, vjust = -1, color = "black"),
-          plot.subtitle = element_text(size = 15), 
-          axis.text = element_text(size = 15), 
-          axis.title = element_text(size = 15))
+    theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
+          plot.title = element_text(size = 20, vjust = -1),
+          plot.subtitle = element_text(size = 20, vjust = -1),
+          axis.text = element_text(size = 20), 
+          axis.title = element_text(size = 20))
  }
  
  
+ #weekly change in mobility trends
+ 
+ working_days = c("Monday", "Tuesday", "Wednesday", 
+              "Thurday", "Friday")
+ 
+ 
+ cntry_cleaned_mobility %>% 
+   filter(country == "Germany") %>% 
+   # filter(date <= "2022-01-01") %>% 
+   filter(date > "2022-01-01") %>%
+   select(country, date, residential, `grocery and pharmacy`, 
+          `transit stations`, `workplaces`, `retail and recreation`) %>% 
+   mutate(weekdays = weekdays(date)) %>% 
+   #filtering out weekdays
+   filter(weekdays %in% working_days) %>% 
+   mutate(week = week(date)) %>% 
+   group_by(week) %>% 
+   summarise(workplaces = mean(workplaces, na.rm = T), 
+             `transit stations` = mean(`transit stations`, na.rm = T)) %>% 
+   ungroup() %>% 
+   #calculate weekly % change in mobility compared with Jan 2020
+   mutate(workplace_weekly_chg = workplaces - lag(workplaces), 
+          transit_weekly_chg = `transit stations` - lag(`transit stations`)) %>% 
+   mutate(date = as.Date(paste(week,year(today()), 'Mon'), '%U %Y %a')) %>% 
+   select(date, workplace_weekly_chg, transit_weekly_chg) %>% 
+   pivot_longer(-date) %>% 
+   filter(!is.na(value)) %>% 
+   filter(!is.na(date)) %>% 
+   mutate(date = as.character(date)) %>% 
+   ggplot() +
+   geom_bar(aes(x= date, y = value, fill = name), stat = "identity", 
+            position = "dodge") +
+   geom_hline(yintercept = 0)+
+   labs(x = " ", y = " ")+
+   scale_x_discrete(labels = function(x) strftime(x, "%b %d")) +
+   scale_fill_manual(values  = c("#cc9900", "#003333"))+
+   estelle_theme() +
+   theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
+         plot.title = element_text(size = 10, vjust = -1),
+         legend.text = element_text(size = 10),
+         plot.subtitle = element_text(size = 10, vjust = -1),
+         axis.text = element_text(size = 10),
+         axis.text.x = element_text(angle = 45, hjust = 1),
+         axis.title = element_text(size = 10), 
+         legend.position = "top") +
+   guides(fill = guide_legend(nrow = 1))
+   
+             
+             
+

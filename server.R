@@ -240,7 +240,6 @@ server <- function(input, output) {
   
   output$mobility_throughout_the_years <-  renderPlot({
     
-    
     year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
                                     filter(country == input$country) %>% 
                                     filter(date < "2021-01-01"), input$country)
@@ -254,17 +253,28 @@ server <- function(input, output) {
     year_3<- mobility_case_chart(cntry_cleaned_mobility %>%
                                    filter(country == input$country) %>% 
                                    filter(date >= "2022-01-01") %>% 
-                                   filter(date < "2023-01-01"), input$country)
+                                   filter(date < "2023-01-01"), input$country) +
+    labs(
+      title = "Red refers to when average daily covid cases are rising", 
+      subtitle = "Grey refers to when average daily covid cases are falling") +
+      theme(plot.margin = margin(0.2, 0.5, 0.2, 0.5, "cm"), 
+            plot.title = element_text(size = 17, vjust = -1, color = "#ff3300", 
+                                      face = "bold",
+                                      margin = margin(0,0,0.3,0, "cm")),
+            plot.subtitle = element_text(size = 17, vjust = -1, color = "#778088",
+                                         face = "bold",
+                                         margin = margin(0,0,0.5,0, "cm")))
     
     
     grid.arrange(year_3, year_2, year_1, 
                  nrow = 3, 
-                 top = textGrob(paste0("As of ", format(max(cntry_cleaned_mobility$date), "%b-%d \nRed refers to when cases are on the rise, Grey refers to when cases are declining")),
-                                gp = gpar(fontface = 4, fontsize = 15,
-                                          hjust = 1)),
+                  top = textGrob(paste0("As of ", format(max(cntry_cleaned_mobility$date),
+                                        "%Y-%m-%d")),
+                                gp = gpar(fontface = 3, fontsize = 20), 
+                hjust = 0.5),
                  bottom = textGrob(
                    "Source: JHU and Google Mobility Data",
-                   gp = gpar(fontface = 3, fontsize = 10), 
+                   gp = gpar(fontface = 3, fontsize = 15), 
                    hjust = -0.5
                  ))
     

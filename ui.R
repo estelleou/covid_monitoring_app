@@ -28,7 +28,7 @@ shinyUI(fluidPage(
       h1("Covid Hotspots For the Week"),
       plotOutput(outputId = "hotspots", width = "1600px", height = "850px"),
      # br(),
-      h1("Regional Covid and Death Levels"),
+      h1("Regional Covid Case and Death Levels"),
       plotOutput(outputId = "regional_ts", width = "1600px", height = "550px"),
       width = 11,
      )
@@ -74,15 +74,15 @@ shinyUI(fluidPage(
                   country_list
       ),
       width = 2,
-      height = 1
+      # height = 1
 
     ),
     # Main panel for displaying outputs ----
     mainPanel(
 
       # Output: Country level by region----
-      h1(" Average Mobility as % of Jan-Feb 2020 levels"),
-      plotOutput(outputId = "mobility_throughout_the_years", width = "800px", height = "550px"),
+      h1(" Average Mobility (% of Jan-Feb 2020 levels)"),
+      plotOutput(outputId = "mobility_throughout_the_years", width = "800px", height = "800px"),
       width = 10,
         )
     )
