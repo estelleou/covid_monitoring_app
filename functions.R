@@ -264,10 +264,10 @@ top_5_country_ranked_by_deaths <- function(region){
                                       max(y_axis_min_max_reference_data$roll_index), 101)))+
     estelle_theme() +
     theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
-          plot.title = element_text(size = 20, vjust = -1),
-          plot.subtitle = element_text(size = 20, vjust = -1),
-          axis.text = element_text(size = 20), 
-          axis.title = element_text(size = 20))
+          plot.title = element_text(size = 16, vjust = -1),
+          plot.subtitle = element_text(size = 16, vjust = -1),
+          axis.text = element_text(size = 16), 
+          axis.title = element_text(size = 16))
  }
  
  
@@ -276,11 +276,11 @@ top_5_country_ranked_by_deaths <- function(region){
  working_days = c("Monday", "Tuesday", "Wednesday", 
               "Thurday", "Friday")
  
- 
- cntry_cleaned_mobility %>% 
-   filter(country == "Germany") %>% 
-   # filter(date <= "2022-01-01") %>% 
-   filter(date > "2022-01-01") %>%
+   
+  weekday_mobility <- function(data) {
+     
+   data %>% 
+      filter(date > today() - 90) %>% 
    select(country, date, residential, `grocery and pharmacy`, 
           `transit stations`, `workplaces`, `retail and recreation`) %>% 
    mutate(weekdays = weekdays(date)) %>% 
@@ -300,24 +300,118 @@ top_5_country_ranked_by_deaths <- function(region){
    filter(!is.na(value)) %>% 
    filter(!is.na(date)) %>% 
    mutate(date = as.character(date)) %>% 
+   mutate(name = ifelse(name == "workplace_weekly_chg" , "Places of Work", 
+                        "Transit Stations")) %>% 
    ggplot() +
    geom_bar(aes(x= date, y = value, fill = name), stat = "identity", 
             position = "dodge") +
    geom_hline(yintercept = 0)+
-   labs(x = " ", y = " ")+
+   labs(x = " ", y = " ", 
+        title = paste0(unique(data$country), ": Change in Mobility on Weekdays"),
+        subtitle = "Weekly % Change in Mobility vs. Jan-Feb 2020 levels")+
    scale_x_discrete(labels = function(x) strftime(x, "%b %d")) +
    scale_fill_manual(values  = c("#cc9900", "#003333"))+
    estelle_theme() +
-   theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
-         plot.title = element_text(size = 10, vjust = -1),
-         legend.text = element_text(size = 10),
-         plot.subtitle = element_text(size = 10, vjust = -1),
-         axis.text = element_text(size = 10),
+   theme(plot.margin = margin(0.5, 0.2, 0.5, 0.2, "cm"), 
+         plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
+                                   face = "bold",
+                                   margin = margin(0,0,0.3,0, "cm")),
+         legend.text = element_text(size = 16),
+         plot.subtitle = element_text(size = 15, vjust = -1, color = "#778088",
+                                      face = "bold",
+                                      margin = margin(0,0,0.5,0, "cm")),
+         axis.text = element_text(size = 16),
          axis.text.x = element_text(angle = 45, hjust = 1),
-         axis.title = element_text(size = 10), 
+         axis.title = element_text(size = 16), 
          legend.position = "top") +
    guides(fill = guide_legend(nrow = 1))
    
-             
-             
+  }
+  
 
+             
+  weekend_mobility <- function(data) {
+    
+  data %>%   
+  filter(date > today() - 90) %>% 
+  select(country, date, residential, `grocery and pharmacy`, 
+         `transit stations`, `workplaces`, `retail and recreation`) %>% 
+    mutate(weekdays = weekdays(date)) %>% 
+    #filtering out weekdays
+    filter(weekdays %in% working_days) %>% 
+    mutate(week = week(date)) %>% 
+    group_by(week) %>% 
+    summarise(residential = mean(residential, na.rm = T), 
+              `retail and recreation` = mean(`retail and recreation`, na.rm = T)) %>% 
+    ungroup() %>% 
+    #calculate weekly % change in mobility compared with Jan 2020
+    mutate(resident_weekly_chg = residential - lag(residential), 
+           retail_weekly_chg = `retail and recreation` - lag(`retail and recreation`)) %>% 
+    mutate(date = as.Date(paste(week,year(today()), 'Mon'), '%U %Y %a')) %>% 
+    select(date, resident_weekly_chg, retail_weekly_chg) %>% 
+    pivot_longer(-date) %>% 
+    filter(!is.na(value)) %>% 
+    filter(!is.na(date)) %>% 
+    mutate(date = as.character(date)) %>% 
+    mutate(name = ifelse(name == "resident_weekly_chg" , "Places of Residence", 
+                         "Retail and Recreation")) %>% 
+    ggplot() +
+    geom_bar(aes(x= date, y = value, fill = name), stat = "identity", 
+             position = "dodge") +
+    geom_hline(yintercept = 0)+
+    labs(x = " ", y = " ", 
+         title = paste0(unique(data$country),  ": Change in Mobility on Weekends"),
+         subtitle = "Weekly % Change in Mobility vs. Jan-Feb 2020 levels")+
+    scale_x_discrete(labels = function(x) strftime(x, "%b %d")) +
+    scale_fill_manual(values  = c("#006633", "#0099cc"))+
+    estelle_theme() +
+    theme(plot.margin = margin(0.5, 0.2, 0.5, 0.2, "cm"), 
+          plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
+                                    face = "bold",
+                                    margin = margin(0,0,0.3,0, "cm")),
+          legend.text = element_text(size = 16),
+          plot.subtitle = element_text(size = 16, vjust = -1, color = "#778088",
+                                       face = "bold",
+                                       margin = margin(0,0,0.5,0, "cm")),
+          axis.text = element_text(size = 16),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.title = element_text(size = 16), 
+          legend.position = "top") +
+    guides(fill = guide_legend(nrow = 1))
+}
+
+  
+  #state-level mobility data for choropleth map --------------------------
+  
+  state_cleaned_mobility <- function(country_name) {
+    #creating country-level mobility data
+    mobility %>%
+    #taking the country total numbers and getting rid of county/city-level data
+    filter(country== country_name) %>%
+    select(-country) %>% 
+    filter(region != "Total") %>%
+    mutate(index = (`retail and recreation` + `transit stations` +workplaces - residential)/4) %>%
+    # mutate(index = (`retail and recreation` - residential)/2) %>%
+    group_by(region) %>% 
+    mutate(roll_index = rollmean(index, k=7, align = "right", fill = NA)) %>% 
+    ungroup() 
+  }
+  
+  
+  
+  us_states <- map_data("state")
+  
+  
+  state_cleaned_mobility("United States") %>% 
+    select(region, date, roll_index) %>% 
+    mutate(region = str_to_lower(region)) %>% 
+    filter(date == last(date)) %>% 
+    left_join(us_states) %>% 
+    ggplot() +
+    geom_polygon(aes(x = long, y = lat, 
+                     group = group, 
+                     fill = roll_index)) +
+    scale_fill_gradient2(low="darkslateblue", high="dark red")+
+    estelle_theme() +
+    theme_map()
+  

@@ -52,7 +52,7 @@ shinyUI(fluidPage(
       
     ),
     # Main panel for displaying outputs ----
-    mainPanel(
+   mainPanel(
       
       # Output: Country level by region----
       h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within the Region"),
@@ -81,8 +81,8 @@ shinyUI(fluidPage(
     mainPanel(
 
       # Output: Country level by region----
-      h1(" Average Mobility (% of Jan-Feb 2020 levels)"),
-      plotOutput(outputId = "mobility_throughout_the_years", width = "800px", height = "800px"),
+      h1("Mobility Indicators"),
+      plotOutput(outputId = "mobility_throughout_the_years", width = "1500px", height = "800px"),
       width = 10,
         )
     )

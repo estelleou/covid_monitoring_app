@@ -12,6 +12,7 @@ library(grid)
 library(directlabels)
 library(RColorBrewer)
 library(shinythemes)
+library(maps)
 
 source("D:/Estelle/Rscripts/estelle_theme.R")
 
@@ -28,6 +29,10 @@ load("cleaned_data/region_covid_data.rda")
 #loading country classifications
 
 source("D:/Estelle/Rscripts/covid_monitoring/Rscripts/country_classification.R")
+
+state_codes <- 
+  read_csv("D:/Estelle/data/country_codes/state_codes.csv") %>% 
+  select(-Abbrev)
 
 #loading in functions for manupulating data
 source("functions.R")
@@ -242,7 +247,8 @@ server <- function(input, output) {
     
     year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
                                     filter(country == input$country) %>% 
-                                    filter(date < "2021-01-01"), input$country)
+                                    filter(date < "2021-01-01"), input$country) +
+      labs(caption = "@ou_estelle")
     
     year_2 <- mobility_case_chart(cntry_cleaned_mobility %>%
                                     filter(country == input$country) %>% 
@@ -258,24 +264,35 @@ server <- function(input, output) {
       title = "Red refers to when average daily covid cases are rising", 
       subtitle = "Grey refers to when average daily covid cases are falling") +
       theme(plot.margin = margin(0.2, 0.5, 0.2, 0.5, "cm"), 
-            plot.title = element_text(size = 17, vjust = -1, color = "#ff3300", 
+            plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
                                       face = "bold",
                                       margin = margin(0,0,0.3,0, "cm")),
-            plot.subtitle = element_text(size = 17, vjust = -1, color = "#778088",
+            plot.subtitle = element_text(size = 16, vjust = -1, color = "#778088",
                                          face = "bold",
                                          margin = margin(0,0,0.5,0, "cm")))
     
+
+    weekday <-weekday_mobility(cntry_cleaned_mobility %>%
+                               filter(country == input$country))
+
+    weekend <-weekend_mobility(cntry_cleaned_mobility %>%
+                                 filter(country == input$country))
+
     
-    grid.arrange(year_3, year_2, year_1, 
-                 nrow = 3, 
-                  top = textGrob(paste0("As of ", format(max(cntry_cleaned_mobility$date),
-                                        "%Y-%m-%d")),
-                                gp = gpar(fontface = 3, fontsize = 20), 
-                hjust = 0.5),
+    grid.arrange(year_3, year_2, year_1, weekday, weekend, 
+                 # nrow = 3, 
+                 # ncol = 2
+                 layout_matrix = rbind(c(1,  4, 5),
+                                       c(2,  4, 5),
+                                       c(3,  NA, NA)),
+                  top = textGrob(paste0( "Average Mobility* (% of Jan-Feb 2020 levels) as of ", format(max(cntry_cleaned_mobility$date),
+                                        "%B-%d")),
+                                gp = gpar(fontface = 4, fontsize = 18),
+                                 x = 0.2),
                  bottom = textGrob(
-                   "Source: JHU and Google Mobility Data",
+                   "*Average Mobility in Recreational, Retail, Transit and Office Spaces with (+) residential activity calculated as a drag on overall mobility \nSource: JHU and Google Mobility Data",
                    gp = gpar(fontface = 3, fontsize = 15), 
-                   hjust = -0.5
+                  x = 0.7
                  ))
     
   })

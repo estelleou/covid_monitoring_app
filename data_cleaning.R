@@ -125,3 +125,5 @@ region_covid_data <-
   mutate(new_deaths_avg_per_pop = ifelse(is.na(new_deaths_avg_per_pop),lag(new_deaths_avg_per_pop), new_deaths_avg_per_pop)) 
 
 save(region_covid_data, file = "cleaned_data/region_covid_data.rda")
+
+
