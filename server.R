@@ -13,6 +13,7 @@ library(directlabels)
 library(RColorBrewer)
 library(shinythemes)
 library(maps)
+library(ggthemes)
 
 source("D:/Estelle/Rscripts/estelle_theme.R")
 
