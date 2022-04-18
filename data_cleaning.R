@@ -4,8 +4,11 @@ wd <- "D:/Estelle/Rscripts/covid_monitoring"
 library(tidyverse)
 library(lubridate)
 library(zoo)
+library(testit)
+library(logr)
 
 source("D:/Estelle/Rscripts/estelle_theme.R")
+tmp <- file.path("data_cleaning.log")
 
 #raw data ---------------------------------------------------------------------
 
@@ -16,6 +19,9 @@ covid_data <-
 #mobility data
 urlfile="https://raw.githubusercontent.com/ActiveConclusion/COVID19_mobility/master/google_reports/mobility_report_countries.csv"
 mobility<-read_csv(url(urlfile))
+save(mobility, file = "cleaned_data/mobility.rda")
+
+lf <- log_open(tmp)
 
 #data cleaning ---------------------------------------------------------------
 
@@ -104,16 +110,29 @@ save(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increa
   mutate(new_deaths_avg = rollmean(new_deaths, k= 7, align = "right", fill = NA)) 
 
 #regional population data ----------------------------------------------------
+
 region_pop <-
   covid_data %>% 
   select(date, continent,population) %>% 
+  arrange(date)  %>% 
+  #taking data from two days ago because sometimes data isn't update for every country on time
+  filter(date == today()-2) %>% 
   group_by(date, continent) %>% 
   mutate(population = sum(population, na.rm = T), 
          population = population/1000000) %>% 
-  unique() %>% 
+  unique() %>%
   ungroup() %>% 
-  filter(date == today()-1)%>% 
+  filter(continent %in% c("North America", "South America", 
+                          "Europe", "Asia", "Africa")) %>% 
+  #getting rid of date variable to not mess up the merge with case data later
   select(-date)
+
+
+#checking that there's data for each continent 
+log_print( 
+  assert("Population data not calculating correctly", length(region_pop$continent) == 5 && 
+           !is.na(region_pop$population))
+)
 
 #combining regional covid and population data to get per capita dataset --------
 region_covid_data <-
@@ -126,4 +145,42 @@ region_covid_data <-
 
 save(region_covid_data, file = "cleaned_data/region_covid_data.rda")
 
+#us state covid data -----------------------------------------------
+
+state_population <-
+  read_csv(url("https://raw.githubusercontent.com/COVID19Tracking/associated-data/master/us_census_data/us_census_2018_population_estimates_states.csv")) %>% 
+  select(state_name, population) %>% 
+  mutate(population = population/1000000) %>% 
+  rename(state = state_name)
+
+state_covid_data <-
+  read_csv(url("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv")) %>% 
+  left_join(state_population, by = "state") 
+
+save(state_covid_data, file = "cleaned_data/state_covid_data.rda")
+
+state_map_case_data <- 
+  state_cleaned_case() %>% 
+  select(region, date, row_avg_weekly_new_cases) %>% 
+  mutate(region = str_to_lower(region)) %>%
+  filter(date == last(date)) %>% 
+  left_join(us_map)
+
+save(state_map_case_data, file = "cleaned_data/state_map_case_data.rda")
+
+state_map_mobility_data <- 
+state_cleaned_mobility("United States") %>% 
+  select(region, date, roll_index) %>% 
+  mutate(change_7day_roll_index = roll_index-lag(roll_index,1),
+         avg_chg_weeklymobility = rollmean(change_7day_roll_index , 
+                                           k = 7, align = "right", fill = NA)) %>% 
+  mutate(region = str_to_lower(region)) %>%
+  filter(date == last(date)) %>% 
+  left_join(us_map)
+
+save(state_map_mobility_data, file = "cleaned_data/state_map_mobility_data.rda")
+
+
+log_close()
+writeLines(readLines(lf))
 

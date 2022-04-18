@@ -82,10 +82,10 @@ cases_hotspot_visuals <- function(region) {
     theme_bw()+
     theme(
       plot.margin = margin(0, 1, 0.5, 1, unit = "cm"),
-      plot.subtitle= element_text(size = 16),
-      plot.title = element_text(size = 16),
-      axis.text = element_text(face = "bold", size = 16),
-      axis.text.y = element_text(face = "bold", size = 16,
+      plot.subtitle= element_text(size = 14),
+      plot.title = element_text(size = 14),
+      axis.text = element_text(face = "bold", size = 14),
+      axis.text.y = element_text(face = "bold", size = 14,
                                  color = as.vector((rev(ifelse(ranked_data$avg_chg_weeklycases >= 0, "red", "black"))))))
 }
 
@@ -123,10 +123,10 @@ death_hotspot_visuals <- function(region) {
     theme_bw()+
     theme(
       plot.margin = margin(0, 1, 0.5, 1, unit = "cm"),
-      plot.subtitle= element_text(size = 16),
-      plot.title = element_text(size = 16),
-      axis.text = element_text(face = "bold", size = 16),
-      axis.text.y = element_text(face = "bold", size = 16,
+      plot.subtitle= element_text(size = 14),
+      plot.title = element_text(size = 14),
+      axis.text = element_text(face = "bold", size = 14),
+      axis.text.y = element_text(face = "bold", size = 14,
                                  color = as.vector((rev(ifelse(ranked_data$avg_chg_weeklydeaths >= 0, "red", "black"))))))
 }
 
@@ -177,6 +177,7 @@ top_5_country_ranked_by_cases <- function(region){
 top_5_country_ranked_by_deaths <- function(region){
   ranked_data <-
     cntry_cleaned_covid %>%
+    select(date, country, new_deaths_avg_per_pop) %>% 
     filter(country %in% region) %>%
     filter(date == last(date)) %>%
     group_by(new_deaths_avg_per_pop,country) %>%
@@ -397,21 +398,37 @@ top_5_country_ranked_by_deaths <- function(region){
     ungroup() 
   }
   
+  #state-level case data for choropleth map --------------------------
   
+  state_cleaned_case <- function(country_name) {
+    
+    #creating state-level mobility data
+      state_covid_data %>% 
+      rename(country = state) %>% 
+      select(-fips) %>% 
+      group_by(country) %>%  
+      group_by(country) %>% 
+      fill(cases, .direction = "down") %>%
+      fill(deaths, .direction = "down") %>%
+      mutate(new_cases = cases - lag(cases,1),
+             new_cases = ifelse(new_cases <=0, 0, new_cases),
+             #to get rid of reporting anomalies
+             new_cases = ifelse(new_cases > lag(new_cases,1)+100, lag(new_cases, 1), new_cases),
+             new_deaths = deaths - lag(deaths,1),
+             new_deaths = ifelse(new_deaths <=0, 0, new_deaths),
+             new_deaths = ifelse(new_deaths > lag(new_deaths,1)+100, lag(new_deaths, 1), new_deaths),
+             new_cases_avg = rollmean(new_cases, k= 7, align = "right", fill = NA) ,
+             new_deaths_avg = rollmean(new_deaths, k = 7, align = "right", fill = NA),
+             new_cases_avg_per_mill = new_cases_avg/population , 
+             new_deaths_avg_per_mill = new_deaths_avg/population,
+             weekly_chg_new_cases = new_cases_avg_per_mill -lag(new_cases_avg_per_mill,1),
+             weekly_chg_new_deaths = new_deaths_avg_per_mill -lag(new_deaths_avg_per_mill,1),
+             row_avg_weekly_new_cases = rollmean(weekly_chg_new_cases, k = 14, align = "right", fill = NA),
+             row_avg_weekly_new_deaths = rollmean(weekly_chg_new_deaths, k = 14, align = "right", fill = NA),) %>% 
+      ungroup() %>% 
+      filter(country != "United States" & country != "X17"& country != "Puerto Rico" & country != "Northern Mariana Islands" &
+               country != "Virgin Islands" & country != "Guam") %>% 
+      rename(region = country)
+  }
   
-  us_states <- map_data("state")
-  
-  
-  state_cleaned_mobility("United States") %>% 
-    select(region, date, roll_index) %>% 
-    mutate(region = str_to_lower(region)) %>% 
-    filter(date == last(date)) %>% 
-    left_join(us_states) %>% 
-    ggplot() +
-    geom_polygon(aes(x = long, y = lat, 
-                     group = group, 
-                     fill = roll_index)) +
-    scale_fill_gradient2(low="darkslateblue", high="dark red")+
-    estelle_theme() +
-    theme_map()
   

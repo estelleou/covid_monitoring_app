@@ -20,12 +20,19 @@ source("D:/Estelle/Rscripts/estelle_theme.R")
 ##!!!!!!!!!!! put this on a cron when done !!!!#######
 source("D:/Estelle/Rscripts/covid_monitoring_app/data_cleaning.R")
 
+#loading in functions for manupulating data
+source("functions.R")
+
 #load in cleaned data that's updated once a day on a cron-----------------------
 
 load("cleaned_data/cntry_cleaned_covid.rda")
 load("cleaned_data/cntry_cleaned_mobility.rda")
 load("cleaned_data/increases_in_deaths_and_cases_within_this_week.rda")
 load("cleaned_data/region_covid_data.rda")
+load("cleaned_data/state_covid_data.rda")
+load("cleaned_data/mobility.rda")
+load("cleaned_data/state_map_case_data.rda")
+load("cleaned_data/state_map_mobility_data.rda")
 
 #loading country classifications
 
@@ -35,8 +42,6 @@ state_codes <-
   read_csv("D:/Estelle/data/country_codes/state_codes.csv") %>% 
   select(-Abbrev)
 
-#loading in functions for manupulating data
-source("functions.R")
 
 #reactive output ---------------------------------------------------------
 
@@ -243,7 +248,6 @@ server <- function(input, output) {
   
   #mobility average charts
   
-  
   output$mobility_throughout_the_years <-  renderPlot({
     
     year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
@@ -281,8 +285,6 @@ server <- function(input, output) {
 
     
     grid.arrange(year_3, year_2, year_1, weekday, weekend, 
-                 # nrow = 3, 
-                 # ncol = 2
                  layout_matrix = rbind(c(1,  4, 5),
                                        c(2,  4, 5),
                                        c(3,  NA, NA)),
@@ -298,10 +300,68 @@ server <- function(input, output) {
     
   })
   
+  output$mobility_within_state <-  renderPlot({
+  
+  
+  us_map <- map_data("state")
+  
+  mobility_graph <- 
+  #states where mobility is increasing or decreasing
+   state_map_mobility_data %>% 
+    ggplot() +
+    geom_polygon(aes(x = long, y = lat, 
+                     group = group, 
+                     fill = avg_chg_weeklymobility),
+                 color = "black")+
+    labs(x = "", y = "", 
+         fill = "States Where Average Mobility* Per Week Is:
+                (Decreasing <----> Increasing)")+
+    scale_fill_gradient2(low="darkslateblue", high="dark red")+
+    theme_bw() +
+      theme(legend.text = element_blank(),
+            legend.title = element_text(size =17, face = "bold"),
+            legend.position = "top",
+            legend.key.size = unit(1,"cm"),
+            legend.margin= margin(0,0,-15,-1),
+            panel.grid = element_blank(),
+            panel.border  =element_blank())+
+    guides(x = "none", y = "none")
+  
+  cases_graph <- 
+  #states where cases are rising or falling 
+    state_map_case_data %>% 
+    ggplot() +
+    geom_polygon(aes(x = long, y = lat, 
+                     group = group, 
+                     fill = row_avg_weekly_new_cases),
+                 color = "black")+
+    labs(x = "", y = "", 
+         fill = "States Where Average Covid Cases Per Week (14-avg.) Are:
+                (Decreasing <----> Increasing)")+
+    scale_fill_gradient2(low="darkslateblue", high="dark red")+
+    estelle_theme() +
+    theme_bw() +
+    theme(legend.text = element_blank(),
+          legend.title = element_text(size =17, face = "bold"),
+          legend.key.size = unit(1,"cm"),
+          legend.position = "top",
+          legend.margin= margin(0,0,0,0),
+          panel.grid = element_blank(),
+          panel.border  =element_blank())+
+    guides(x = "none", y = "none")
+  
+  
+  grid.arrange(mobility_graph, cases_graph, 
+               nrow = 1)
+  
+  })
+  
 }
-      
+
+#generate dropdown selection for average mobility charts      
 country_list <- as.list(unique(cntry_cleaned_mobility$country))
 ui <- source("ui.R")
 # Create Shiny app ----
 shinyApp(ui = ui, server = server)
+
 
