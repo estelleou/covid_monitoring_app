@@ -352,7 +352,12 @@ server <- function(input, output) {
   
   
   grid.arrange(mobility_graph, cases_graph, 
-               nrow = 1)
+               nrow = 1,
+               bottom = textGrob(
+                 "*Average Mobility in Recreational, Retail, Transit and Office Spaces with (+) residential activity calculated as a drag on overall mobility \nSource: JHU and Google Mobility Data",
+                 gp = gpar(fontface = 3, fontsize = 15), 
+                 x = 0.7)
+  )
   
   })
   
