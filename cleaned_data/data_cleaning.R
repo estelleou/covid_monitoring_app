@@ -1,14 +1,10 @@
-#on line 518 add created by Estelle Ou
-wd <- "D:/Estelle/Rscripts/covid_monitoring"
-
 library(tidyverse)
 library(lubridate)
 library(zoo)
 library(testit)
 library(logr)
 
-source("D:/Estelle/Rscripts/estelle_theme.R")
-tmp <- file.path("data_cleaning.log")
+tmp <- file.path("cleaned_data/data_cleaning.log")
 
 #raw data ---------------------------------------------------------------------
 
@@ -19,7 +15,7 @@ covid_data <-
 #mobility data
 urlfile="https://raw.githubusercontent.com/ActiveConclusion/COVID19_mobility/master/google_reports/mobility_report_countries.csv"
 mobility<-read_csv(url(urlfile))
-save(mobility, file = "cleaned_data/mobility.rda")
+save(mobility, file = "cleaned_data/mobility.csv")
 
 lf <- log_open(tmp)
 
@@ -37,7 +33,7 @@ cntry_cleaned_mobility <-
   mutate(roll_index = rollmean(index, k=7, align = "right", fill = NA)) %>% 
   ungroup()
 
-save(cntry_cleaned_mobility, file = "cleaned_data/cntry_cleaned_mobility.rda")
+write_csv(cntry_cleaned_mobility, file = "cleaned_data/cntry_cleaned_mobility.csv")
 
 #COVID data cleaning 
 cntry_cleaned_covid <-
@@ -70,7 +66,7 @@ cntry_cleaned_covid <-
          new_deaths_avg_per_pop = ifelse(new_deaths_avg_per_pop <0, 0, new_deaths_avg_per_pop)) %>% 
   ungroup()
 
-save(cntry_cleaned_covid, file = "cleaned_data/cntry_cleaned_covid.rda")
+write_csv(cntry_cleaned_covid, file = "cleaned_data/cntry_cleaned_covid.csv")
 
 #data set of speed of cases and deaths --------------------------------------
 increases_in_deaths_and_cases_within_this_week <- 
@@ -82,7 +78,7 @@ increases_in_deaths_and_cases_within_this_week <-
          avg_chg_weeklydeaths = rollmean(change_7day_avg_new_deaths_per_pop, k = 14, align = "right", fill = NA),) %>% 
   ungroup() 
 
-save(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increases_in_deaths_and_cases_within_this_week.rda")
+write_csv(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increases_in_deaths_and_cases_within_this_week.csv")
 
 
 #regional covid cases data set ------------------------------------------------
@@ -143,7 +139,7 @@ region_covid_data <-
   mutate(new_cases_avg_per_pop = ifelse(is.na(new_cases_avg_per_pop),lag(new_cases_avg_per_pop), new_cases_avg_per_pop)) %>% 
   mutate(new_deaths_avg_per_pop = ifelse(is.na(new_deaths_avg_per_pop),lag(new_deaths_avg_per_pop), new_deaths_avg_per_pop)) 
 
-save(region_covid_data, file = "cleaned_data/region_covid_data.rda")
+write_csv(region_covid_data, file = "cleaned_data/region_covid_data.csv")
 
 
 log_close()
