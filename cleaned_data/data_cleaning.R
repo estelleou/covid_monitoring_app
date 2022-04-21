@@ -3,7 +3,19 @@ library(lubridate)
 library(zoo)
 library(testit)
 library(logr)
-library(googlesheets)
+library(googlesheets4)
+
+# # designate project-specific cache
+# options(gargle_oauth_cache = ".secrets")
+# # check the value of the option, if you like
+# gargle::gargle_oauth_cache()
+# # trigger auth on purpose to store a token in the specified cache
+# # a broswer will be opened
+# googlesheets4::gs4_create()
+# # see your token file in the cache, if you like
+# list.files(".secrets/")
+
+gs4_auth(cache = ".secrets", email = "estelles.bot.assistant@gmail.com")
 
 tmp <- file.path("cleaned_data/data_cleaning.log")
 
@@ -16,7 +28,6 @@ covid_data <-
 #mobility data
 urlfile="https://raw.githubusercontent.com/ActiveConclusion/COVID19_mobility/master/google_reports/mobility_report_countries.csv"
 mobility<-read_csv(url(urlfile))
-save(mobility, file = "cleaned_data/mobility.csv")
 
 lf <- log_open(tmp)
 
@@ -35,40 +46,28 @@ cntry_cleaned_mobility <-
   ungroup() %>% 
   select(-index, -region, -parks)
 
-write_csv(cntry_cleaned_mobility, file = "cleaned_data/cntry_cleaned_mobility.csv")
+sheet_write(cntry_cleaned_mobility,  ss = "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE")
 
 #COVID data cleaning 
 cntry_cleaned_covid <-
   covid_data %>% 
-  select(date, location, total_cases, new_cases, total_deaths, new_deaths, icu_patients, new_cases_per_million, new_deaths_per_million,
-         hosp_patients, weekly_hosp_admissions, weekly_icu_admissions, total_tests,
-         new_tests, total_vaccinations, people_vaccinated, new_vaccinations, people_fully_vaccinated,
-         stringency_index, population) %>% 
+  select(date, location, total_cases, new_cases, total_deaths, new_deaths, population) %>% 
   rename(country = location) %>% 
   #smoothing out by creating 7-day rolling average
   group_by(country) %>% 
   fill(new_cases, .direction = "down") %>%
   fill(new_deaths, .direction = "down") %>%
-  fill(new_vaccinations, .direction = "down") %>%
-  fill(people_fully_vaccinated, .direction = "down") %>% 
   mutate(new_cases_avg = rollmean(new_cases, k= 7, align = "right", fill = NA),
-         new_deaths_avg =rollmean(new_deaths, k = 7, align = "right", fill = NA),
-         weekly_hosp_admin_avg = rollmean(weekly_hosp_admissions, k = 7, align = "right", fill = NA),
-         weekly_icu_admin_avg = rollmean(weekly_icu_admissions, k = 7, align = "right", fill = NA),
-         new_vac_avg = rollmean(new_vaccinations , k = 7, align = "right", fill = NA)) %>% 
-  select(-new_cases, -new_deaths, -weekly_hosp_admissions, -weekly_icu_admissions, -new_vaccinations) %>%
-  mutate( total_cases_per_pop = (total_cases/population),
-          total_vax_per_pop = (total_vaccinations/population)*100,
-          fully_vaxed_per_pop = (people_fully_vaccinated/population)*100,
-          new_vax_avg_per_pop = ((new_vac_avg/population)*100),
-          population = population/1000000,
+         new_deaths_avg =rollmean(new_deaths, k = 7, align = "right", fill = NA)) %>% 
+  select(-new_cases, -new_deaths) %>%
+  mutate(population = population/1000000,
           new_deaths_avg_per_pop = (new_deaths_avg/population),
           new_cases_avg_per_pop = (new_cases_avg/population)) %>% 
   mutate(new_cases_avg_per_pop = ifelse(new_cases_avg_per_pop <0, 0, new_cases_avg_per_pop),
          new_deaths_avg_per_pop = ifelse(new_deaths_avg_per_pop <0, 0, new_deaths_avg_per_pop)) %>% 
   ungroup()
 
-write_csv(cntry_cleaned_covid, file = "cleaned_data/cntry_cleaned_covid.csv")
+sheet_write(cntry_cleaned_covid, ss = "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg")
 
 #data set of speed of cases and deaths --------------------------------------
 increases_in_deaths_and_cases_within_this_week <- 
@@ -80,7 +79,7 @@ increases_in_deaths_and_cases_within_this_week <-
          avg_chg_weeklydeaths = rollmean(change_7day_avg_new_deaths_per_pop, k = 14, align = "right", fill = NA),) %>% 
   ungroup() 
 
-write_csv(increases_in_deaths_and_cases_within_this_week, file = "cleaned_data/increases_in_deaths_and_cases_within_this_week.csv")
+sheet_write(increases_in_deaths_and_cases_within_this_week, ss = "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU")
 
 
 #regional covid cases data set ------------------------------------------------
@@ -141,7 +140,7 @@ region_covid_data <-
   mutate(new_cases_avg_per_pop = ifelse(is.na(new_cases_avg_per_pop),lag(new_cases_avg_per_pop), new_cases_avg_per_pop)) %>% 
   mutate(new_deaths_avg_per_pop = ifelse(is.na(new_deaths_avg_per_pop),lag(new_deaths_avg_per_pop), new_deaths_avg_per_pop)) 
 
-write_csv(region_covid_data, file = "cleaned_data/region_covid_data.csv")
+sheet_write("region_covid_data", ss = "1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM")
 
 
 log_close()

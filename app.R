@@ -11,11 +11,7 @@ library(directlabels)
 library(RColorBrewer)
 library(shinythemes)
 library(ggthemes)
-
-
-
-##!!!!!!!!!!! put this on a cron when done !!!!#######
-source("D:/Estelle/Rscripts/covid_monitoring_app/cleaned_data/data_cleaning.R")
+library(googlesheets4)
 
 
 #loading country classifications
@@ -26,21 +22,16 @@ source("estelle_theme.R")
 #loading in functions for manupulating data
 source("functions.R")
 
+gs4_deauth()
+cntry_cleaned_covid <- read_sheet("https://docs.google.com/spreadsheets/d/1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg/edit#gid=1139984273")
+cntry_cleaned_mobility <- read_sheet("https://docs.google.com/spreadsheets/d/1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE/edit")
+increases_in_deaths_and_cases_within_this_week <-  read_sheet("https://docs.google.com/spreadsheets/d/1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU/edit")
+region_covid_data <-  read_sheet("https://docs.google.com/spreadsheets/d/1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM/edit")
 
 #reactive output ---------------------------------------------------------
 
 server <- function(input, output) {
   
-  cntry_cleaned_covid <- read_csv(url("https://raw.githubusercontent.com/estelleou/fofdata/main/all_sectors_levels_a.csv"))
-  # load("cleaned_data/cntry_cleaned_mobility.rda")
-  # increases_in_deaths_and_cases_within_this_week <-  load("cleaned_data/increases_in_deaths_and_cases_within_this_week.rda")
-  download.file("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv", "test.csv" )
-  region <- read_csv("test.csv")
-  load("cleaned_data/region_covid_data.rda")
-  # load("cleaned_data/state_covid_data.rda")
-  # load("cleaned_data/mobility.rda")
-  # load("cleaned_data/state_map_case_data.rda")
-  # load("cleaned_data/state_map_mobility_data.rda")
   #hotspots charts ---------------------------------------------------------  
   
   #cache all the graphs to optimize refresh rate --------------------------
@@ -358,7 +349,7 @@ server <- function(input, output) {
 }
 
 #generate dropdown selection for average mobility charts    
-load("cleaned_data/cntry_cleaned_mobility.rda")
+
 country_list <- as.list(unique(cntry_cleaned_mobility$country))
 
 #start of UI file 

@@ -1,9 +1,14 @@
+#Estelle's graph theme
 
+library(tidyverse)
+library(lubridate)
 
+  
 estelle_theme <- function(){
   
   font <- "Helvetica"
-theme(
+  
+ theme(
   
     plot.title = element_text(family=font,
                                        size=28,
@@ -28,13 +33,18 @@ theme(
                                       size=18,
                                       color="#222222"),
     axis.text.x = element_text(margin=margin(5, b = 10)),
-    axis.ticks = element_blank(),
+    # axis.ticks = element_blank(),
     axis.line = element_line(),
 
     panel.background = element_blank(),
 
     strip.background = element_rect(fill="white"),
     strip.text = element_text(size  = 22,  hjust = 0)
-)
+  )
+}
+
+colors <- 
+  c("#FFCC33", "#0066CC")
   
-  }
+
+
