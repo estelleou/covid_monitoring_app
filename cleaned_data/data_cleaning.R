@@ -3,6 +3,7 @@ library(lubridate)
 library(zoo)
 library(testit)
 library(logr)
+library(googlesheets)
 
 tmp <- file.path("cleaned_data/data_cleaning.log")
 
@@ -31,7 +32,8 @@ cntry_cleaned_mobility <-
   mutate(index = (`retail and recreation` + `transit stations` + workplaces - residential)/4) %>%
   group_by(country) %>%
   mutate(roll_index = rollmean(index, k=7, align = "right", fill = NA)) %>% 
-  ungroup()
+  ungroup() %>% 
+  select(-index, -region, -parks)
 
 write_csv(cntry_cleaned_mobility, file = "cleaned_data/cntry_cleaned_mobility.csv")
 
