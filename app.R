@@ -22,15 +22,15 @@ source("estelle_theme.R")
 #loading in functions for manupulating data
 source("functions.R")
 
-gs4_deauth()
-cntry_cleaned_covid <- read_sheet("https://docs.google.com/spreadsheets/d/1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg/edit#gid=1139984273")
-cntry_cleaned_mobility <- read_sheet("https://docs.google.com/spreadsheets/d/1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE/edit")
-increases_in_deaths_and_cases_within_this_week <-  read_sheet("https://docs.google.com/spreadsheets/d/1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU/edit")
-region_covid_data <-  read_sheet("https://docs.google.com/spreadsheets/d/1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM/edit")
+cntry_cleaned_covid <- read_csv("cleaned_data/cntry_cleaned_covid.csv")
+cntry_cleaned_mobility <- read_csv("cleaned_data/cntry_cleaned_mobility.csv")
 
 #reactive output ---------------------------------------------------------
 
 server <- function(input, output) {
+  
+  #load updated data
+  gs4_deauth()
   
   #hotspots charts ---------------------------------------------------------  
   
@@ -101,6 +101,10 @@ server <- function(input, output) {
   
   output$hotspots <- renderPlot({
     
+    increases_in_deaths_and_cases_within_this_week <-  
+      read_sheet(ss= "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU") %>% 
+      mutate(date = as.Date(date))
+    
     if (input$type =="deaths") {
       
       grid.arrange(em_death_hotspot(), dm_death_hotspot(), eu_death_hotspot(), asia_death_hotspot(), 
@@ -128,10 +132,12 @@ server <- function(input, output) {
   })
   
   regional_covid_cases <- reactive({
+    region_covid_data <- 
+      read_sheet("https://docs.google.com/spreadsheets/d/1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM/edit") %>% 
+      mutate(date = as.Date(date))
+    
     
     region_covid_data %>%
-      filter(!is.na(continent)) %>%
-      filter(date > "2020-01-31") %>%
       select(date,continent, new_cases_avg_per_pop) %>%
       mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
       filter(continent != "Oceania") %>%
@@ -162,8 +168,6 @@ server <- function(input, output) {
   regional_covid_deaths <- reactive({
     
     region_covid_data %>%
-      filter(!is.na(continent)) %>%
-      filter(date > "2020-01-31") %>%
       select(date,continent, new_deaths_avg_per_pop) %>%
       mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
       filter(continent != "Oceania") %>%
@@ -198,10 +202,24 @@ server <- function(input, output) {
     
   })
   
+  #reading in latest cleaned covid data separately to speed up the process
+  cntry_cleaned_covid_2022_onward <- list()
+  for (i in seq(1:month(today()))) {
+    
+    data <-
+      read_sheet(ss= "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg", 
+                 sheet = paste0("cntry_cleaned_covid_",i)) %>% 
+      mutate(date = as.Date(date))
+    
+    cntry_cleaned_covid_2022_onward <- bind_rows( cntry_cleaned_covid_2022_onward, data)
+  }
+  
   
   #country covid case and death ranking bars by region ------------------------
   
   output$covid_rankings <- renderPlot({
+    
+
     
     if (input$region =="em") {
       
@@ -231,9 +249,23 @@ server <- function(input, output) {
     
   })
   
+  
   #mobility average charts
   
   output$mobility_throughout_the_years <-  renderPlot({
+    
+    #reading in latest cleaned covid data separately to speed up the process
+    cntry_cleaned_mobility_2022_onwards <- list()
+    for (i in seq(1:month(today()))) {
+      
+      data <-
+        read_sheet(ss= "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE", 
+                   sheet = paste0("cntry_cleaned_mobility_",i)) %>% 
+        mutate(date = as.Date(date))
+      
+      cntry_cleaned_mobility_2022_onwards <- bind_rows(cntry_cleaned_mobility_2022_onwards, data)
+    }
+    
     
     year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
                                     filter(country == input$country) %>% 
@@ -246,7 +278,7 @@ server <- function(input, output) {
                                     filter(date < "2022-01-01"), input$country)
     
     
-    year_3<- mobility_case_chart(cntry_cleaned_mobility %>%
+    year_3<- mobility_case_chart(cntry_cleaned_mobility_2022_onwards %>%
                                    filter(country == input$country) %>% 
                                    filter(date >= "2022-01-01") %>% 
                                    filter(date < "2023-01-01"), input$country) +
@@ -262,10 +294,10 @@ server <- function(input, output) {
                                          margin = margin(0,0,0.5,0, "cm")))
     
     
-    weekday <-weekday_mobility(cntry_cleaned_mobility %>%
+    weekday <-weekday_mobility(cntry_cleaned_mobility_2022_onwards %>%
                                  filter(country == input$country))
     
-    weekend <-weekend_mobility(cntry_cleaned_mobility %>%
+    weekend <-weekend_mobility(cntry_cleaned_mobility_2022_onwards %>%
                                  filter(country == input$country))
     
     
@@ -273,7 +305,7 @@ server <- function(input, output) {
                  layout_matrix = rbind(c(1,  4, 5),
                                        c(2,  4, 5),
                                        c(3,  NA, NA)),
-                 top = textGrob(paste0( "Average Mobility* (% of Jan-Feb 2020 levels) as of ", format(max(cntry_cleaned_mobility$date),
+                 top = textGrob(paste0( "Average Mobility* (% of Jan-Feb 2020 levels) as of ", format(max(cntry_cleaned_mobility_2022_onwards$date),
                                                                                                       "%B-%d")),
                                 gp = gpar(fontface = 4, fontsize = 18),
                                 x = 0.2),
@@ -285,66 +317,6 @@ server <- function(input, output) {
     
   })
   
-  output$mobility_within_state <-  renderPlot({
-    
-    
-    us_map <- map_data("state")
-    
-    mobility_graph <- 
-      #states where mobility is increasing or decreasing
-      state_map_mobility_data %>% 
-      ggplot() +
-      geom_polygon(aes(x = long, y = lat, 
-                       group = group, 
-                       fill = avg_chg_weeklymobility),
-                   color = "black")+
-      labs(x = "", y = "", 
-           fill = "States Where Average Mobility* Per Week Is:
-                (Decreasing <----> Increasing)")+
-      scale_fill_gradient2(low="darkslateblue", high="dark red")+
-      theme_bw() +
-      theme(legend.text = element_blank(),
-            legend.title = element_text(size =17, face = "bold"),
-            legend.position = "top",
-            legend.key.size = unit(1,"cm"),
-            legend.margin= margin(0,0,-15,-1),
-            panel.grid = element_blank(),
-            panel.border  =element_blank())+
-      guides(x = "none", y = "none")
-    
-    cases_graph <- 
-      #states where cases are rising or falling 
-      state_map_case_data %>% 
-      ggplot() +
-      geom_polygon(aes(x = long, y = lat, 
-                       group = group, 
-                       fill = row_avg_weekly_new_cases),
-                   color = "black")+
-      labs(x = "", y = "", 
-           fill = "States Where Average Covid Cases Per Week (14-avg.) Are:
-                (Decreasing <----> Increasing)")+
-      scale_fill_gradient2(low="darkslateblue", high="dark red")+
-      estelle_theme() +
-      theme_bw() +
-      theme(legend.text = element_blank(),
-            legend.title = element_text(size =17, face = "bold"),
-            legend.key.size = unit(1,"cm"),
-            legend.position = "top",
-            legend.margin= margin(0,0,0,0),
-            panel.grid = element_blank(),
-            panel.border  =element_blank())+
-      guides(x = "none", y = "none")
-    
-    
-    grid.arrange(mobility_graph, cases_graph, 
-                 nrow = 1,
-                 bottom = textGrob(
-                   "*Average Mobility in Recreational, Retail, Transit and Office Spaces with (+) residential activity calculated as a drag on overall mobility \nSource: JHU and Google Mobility Data",
-                   gp = gpar(fontface = 3, fontsize = 15), 
-                   x = 0.7)
-    )
-    
-  })
   
 }
 

@@ -17,6 +17,7 @@ library(googlesheets4)
 
 gs4_auth(cache = ".secrets", email = "estelles.bot.assistant@gmail.com")
 
+
 tmp <- file.path("cleaned_data/data_cleaning.log")
 
 #raw data ---------------------------------------------------------------------
@@ -44,9 +45,24 @@ cntry_cleaned_mobility <-
   group_by(country) %>%
   mutate(roll_index = rollmean(index, k=7, align = "right", fill = NA)) %>% 
   ungroup() %>% 
-  select(-index, -region, -parks)
+  select(-index, -region, -parks, `grocery and pharmacy`)
 
-sheet_write(cntry_cleaned_mobility,  ss = "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE")
+#data loaded into initial app publication
+# write_csv(cntry_cleaned_mobility, "cleaned_data/cntry_cleaned_mobility.csv")
+
+#creating separate/smaller data for uploading to website
+for (i in seq(1:month(today()))) {
+  
+  cntry_cleaned_mobility_2022_onwards <- 
+    cntry_cleaned_mobility %>% 
+    filter(date > "2021-12-31") %>% 
+    filter(date >= ymd(paste0("2022-", i,"-01"))) %>% 
+    filter(date < ymd(paste0("2022-", i+1, "-01" )))
+  
+  sheet_write(cntry_cleaned_mobility_2022_onwards,  ss = "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE",
+              sheet = paste0("cntry_cleaned_mobility_",i))
+  
+}
 
 #COVID data cleaning 
 cntry_cleaned_covid <-
@@ -65,9 +81,25 @@ cntry_cleaned_covid <-
           new_cases_avg_per_pop = (new_cases_avg/population)) %>% 
   mutate(new_cases_avg_per_pop = ifelse(new_cases_avg_per_pop <0, 0, new_cases_avg_per_pop),
          new_deaths_avg_per_pop = ifelse(new_deaths_avg_per_pop <0, 0, new_deaths_avg_per_pop)) %>% 
-  ungroup()
+  ungroup() %>% 
+  select(date, country, new_cases_avg_per_pop, new_deaths_avg_per_pop)
 
-sheet_write(cntry_cleaned_covid, ss = "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg")
+#data loaded into initial app publication
+# write_csv(cntry_cleaned_covid, "cleaned_data/cntry_cleaned_covid.csv")
+
+#creating separate/smaller data for uploading to website
+for (i in seq(1:month(today()))) {
+  
+  cntry_cleaned_covid_2022_onward <- 
+  cntry_cleaned_covid %>% 
+    filter(date > today()-368) %>% 
+    filter(date >= ymd(paste0("2022-", i,"-01"))) %>% 
+    filter(date < ymd(paste0("2022-", i+1, "-01" )))
+  
+  sheet_write(cntry_cleaned_covid_2022_onward, ss = "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg", 
+              sheet = paste0("cntry_cleaned_covid_",i))
+  
+}
 
 #data set of speed of cases and deaths --------------------------------------
 increases_in_deaths_and_cases_within_this_week <- 
@@ -77,9 +109,12 @@ increases_in_deaths_and_cases_within_this_week <-
          change_7day_avg_new_deaths_per_pop = new_deaths_avg_per_pop-lag(new_deaths_avg_per_pop,1),
          avg_chg_weeklycases = rollmean(change_7day_avg_new_cases_per_pop, k = 14, align = "right", fill = NA),
          avg_chg_weeklydeaths = rollmean(change_7day_avg_new_deaths_per_pop, k = 14, align = "right", fill = NA),) %>% 
-  ungroup() 
+  ungroup() %>% 
+  filter(date > today() - 3) %>% 
+  select(date, country, avg_chg_weeklycases, avg_chg_weeklydeaths)
 
-sheet_write(increases_in_deaths_and_cases_within_this_week, ss = "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU")
+write_sheet(data = increases_in_deaths_and_cases_within_this_week, ss = "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU", 
+            sheet = "increases_in_deaths_and_cases_within_this_week")
 
 
 #regional covid cases data set ------------------------------------------------
@@ -138,9 +173,13 @@ region_covid_data <-
   mutate(new_cases_avg_per_pop = (new_cases_avg/population)) %>% 
   mutate(new_deaths_avg_per_pop = (new_deaths_avg/population)) %>% 
   mutate(new_cases_avg_per_pop = ifelse(is.na(new_cases_avg_per_pop),lag(new_cases_avg_per_pop), new_cases_avg_per_pop)) %>% 
-  mutate(new_deaths_avg_per_pop = ifelse(is.na(new_deaths_avg_per_pop),lag(new_deaths_avg_per_pop), new_deaths_avg_per_pop)) 
+  mutate(new_deaths_avg_per_pop = ifelse(is.na(new_deaths_avg_per_pop),lag(new_deaths_avg_per_pop), new_deaths_avg_per_pop)) %>% 
+  filter(!is.na(continent)) %>%
+  filter(date > "2020-01-31") %>% 
+  select(date, continent, new_cases_avg_per_pop, new_deaths_avg_per_pop)
 
-sheet_write("region_covid_data", ss = "1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM")
+sheet_write(region_covid_data , ss = "1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM",
+            sheet = "region_covid_data")
 
 
 log_close()
