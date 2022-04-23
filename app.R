@@ -21,30 +21,29 @@ source("estelle_theme.R")
 #loading in functions for manupulating data
 source("functions.R")
 
-cntry_cleaned_mobility <- read_csv("cleaned_data/cntry_cleaned_mobility.csv")
+#load updated data
+#reading in latest cleaned covid data separately to speed up the process
+cntry_cleaned_mobility_2022_onwards <-
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_mobility_2022_onwards.csv?token=GHSAT0AAAAAABSOFOUAUTFAHTOVWB4OMKEAYTD53BQ"))
+
+cntry_cleaned_covid_2022_onwards <- 
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_covid_2022_onward.csv"))
+
+increases_in_deaths_and_cases_within_this_week <-  
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/increases_in_deaths_and_cases_within_this_week"))
+
+mobility_and_case_speed_data_2022_onwards <-  
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_2022_onwards.csv"))
+
+region_covid_data <- 
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv"))
+
+mobility_and_case_speed_data <- 
+  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_data.csv"))
 
 #reactive output ---------------------------------------------------------
 
 server <- function(input, output) {
-  #load updated data
-  #reading in latest cleaned covid data separately to speed up the process
-  cntry_cleaned_mobility_2022_onwards <-
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_mobility_2022_onwards.csv?token=GHSAT0AAAAAABSOFOUAUTFAHTOVWB4OMKEAYTD53BQ"))
-  
-  cntry_cleaned_covid_2022_onwards <- 
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_covid_2022_onward.csv"))
-  
-  increases_in_deaths_and_cases_within_this_week <-  
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/increases_in_deaths_and_cases_within_this_week"))
-  
-  mobility_and_case_speed_data_2022_onwards <-  
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_2022_onwards.csv"))
-  
-  region_covid_data <- 
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv"))
-  
-  mobility_and_case_speed_data <- 
-    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_data.csv"))
 
   #hotspots charts ---------------------------------------------------------  
   
@@ -114,6 +113,7 @@ server <- function(input, output) {
   
   
   output$hotspots <- renderPlot({
+    
     
     if (input$type =="deaths") {
       
@@ -364,10 +364,10 @@ ui <-  shinyUI(fluidPage(
       
       # Output: Hotspots and Regional----
       h1("Covid Hotspots For the Week In Red: "),
-      plotOutput(outputId = "hotspots", width = "1700px", height = "850px"),
+      plotOutput(outputId = "hotspots", width = "100%", height = "850px"),
       hr(),
       h1("Regional Covid Case and Death Levels"),
-      plotOutput(outputId = "regional_ts", width = "1700px", height = "650px"),
+      plotOutput(outputId = "regional_ts", width = "100%", height = "650px"),
       width = 11,
     )
   ),
@@ -395,7 +395,7 @@ ui <-  shinyUI(fluidPage(
       # Output: Country level by region----
       hr(),
       h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within Country Grouping"),
-      plotOutput(outputId = "covid_rankings", width = "1600px", height = "550px"),
+      plotOutput(outputId = "covid_rankings", width = "100%", height = "550px"),
       width = 10,
     )
   ),
@@ -421,7 +421,7 @@ ui <-  shinyUI(fluidPage(
       # Output: Country level by region----
       hr(),
       h1("Mobility Indicators"),
-      plotOutput(outputId = "mobility_throughout_the_years", width = "1500px", height = "800px"),
+      plotOutput(outputId = "mobility_throughout_the_years", width = "100%",height = "800px"),
       width = 10,
     )
   )
