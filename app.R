@@ -11,7 +11,6 @@ library(directlabels)
 library(RColorBrewer)
 library(shinythemes)
 library(ggthemes)
-library(googlesheets4)
 
 
 #loading country classifications
