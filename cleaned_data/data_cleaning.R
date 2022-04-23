@@ -3,20 +3,6 @@ library(lubridate)
 library(zoo)
 library(testit)
 library(logr)
-library(googlesheets4)
-
-# # designate project-specific cache
-# options(gargle_oauth_cache = ".secrets")
-# # check the value of the option, if you like
-# gargle::gargle_oauth_cache()
-# # trigger auth on purpose to store a token in the specified cache
-# # a broswer will be opened
-# googlesheets4::gs4_create()
-# # see your token file in the cache, if you like
-# list.files(".secrets/")
-
-gs4_auth(cache = ".secrets", email = "estelles.bot.assistant@gmail.com")
-
 
 tmp <- file.path("cleaned_data/data_cleaning.log")
 
@@ -51,18 +37,10 @@ cntry_cleaned_mobility <-
 # write_csv(cntry_cleaned_mobility, "cleaned_data/cntry_cleaned_mobility.csv")
 
 #creating separate/smaller data for uploading to website
-for (i in seq(1:month(today()))) {
-  
+
   cntry_cleaned_mobility_2022_onwards <- 
     cntry_cleaned_mobility %>% 
-    filter(date > "2021-12-31") %>% 
-    filter(date >= ymd(paste0("2022-", i,"-01"))) %>% 
-    filter(date < ymd(paste0("2022-", i+1, "-01" )))
-  
-  sheet_write(cntry_cleaned_mobility_2022_onwards,  ss = "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE",
-              sheet = paste0("cntry_cleaned_mobility_",i))
-  
-}
+    filter(date > "2021-12-31") 
 
 write_csv(cntry_cleaned_mobility_2022_onwards, "cleaned_data/cntry_cleaned_mobility_2022_onwards.csv")
 
@@ -87,7 +65,7 @@ cntry_cleaned_covid <-
   select(date, country, new_cases_avg_per_pop, new_deaths_avg_per_pop)
 
 #data loaded into initial app publication
-# write_csv(cntry_cleaned_covid, "cleaned_data/cntry_cleaned_covid.csv")
+write_csv(cntry_cleaned_covid, "cleaned_data/cntry_cleaned_covid.csv")
 
   
   cntry_cleaned_covid_2022_onward <- 
@@ -108,11 +86,9 @@ increases_in_deaths_and_cases_within_this_week <-
   select(date, country, avg_chg_weeklycases, avg_chg_weeklydeaths)
 
 increases_in_deaths_and_cases_within_this_week_2022_onward <- 
+  increases_in_deaths_and_cases_within_this_week %>% 
   filter(date > "2021-12-31") %>% 
   select(date, country, avg_chg_weeklycases, avg_chg_weeklydeaths)
-
-write_sheet(data = increases_in_deaths_and_cases_within_this_week, ss = "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU", 
-            sheet = "increases_in_deaths_and_cases_within_this_week")
 
 write_csv(increases_in_deaths_and_cases_within_this_week_2022_onward, "cleaned_data/increases_in_deaths_and_cases_within_this_week")
 
@@ -193,8 +169,7 @@ region_covid_data <-
   filter(date > "2020-01-31") %>% 
   select(date, continent, new_cases_avg_per_pop, new_deaths_avg_per_pop)
 
-sheet_write(region_covid_data , ss = "1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM",
-            sheet = "region_covid_data")
+
 write_csv(region_covid_data, "cleaned_data/region_covid_data.csv")
 
 log_close()
