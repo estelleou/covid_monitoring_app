@@ -22,88 +22,99 @@ source("estelle_theme.R")
 #loading in functions for manupulating data
 source("functions.R")
 
-cntry_cleaned_covid <- read_csv("cleaned_data/cntry_cleaned_covid.csv")
 cntry_cleaned_mobility <- read_csv("cleaned_data/cntry_cleaned_mobility.csv")
 
 #reactive output ---------------------------------------------------------
 
 server <- function(input, output) {
-  
   #load updated data
-  gs4_deauth()
+  #reading in latest cleaned covid data separately to speed up the process
+  cntry_cleaned_mobility_2022_onwards <-
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_mobility_2022_onwards.csv?token=GHSAT0AAAAAABSOFOUAUTFAHTOVWB4OMKEAYTD53BQ"))
   
+  cntry_cleaned_covid_2022_onwards <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_covid_2022_onward.csv"))
+  
+  increases_in_deaths_and_cases_within_this_week <-  
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/increases_in_deaths_and_cases_within_this_week"))
+  
+  mobility_and_case_speed_data_2022_onwards <-  
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_2022_onwards.csv"))
+  
+  region_covid_data <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv"))
+  
+  mobility_and_case_speed_data <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_data.csv"))
+
   #hotspots charts ---------------------------------------------------------  
   
   #cache all the graphs to optimize refresh rate --------------------------
   em_case_hotspot <- reactive({
     
-    cases_hotspot_visuals(em) +
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, em) +
       labs(title = "EM Covid Case Hotspots")
   }) 
   
   dm_case_hotspot <- reactive({
-    cases_hotspot_visuals(dm) +
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, dm) +
       labs(title = "DM Covid Case Hotpots")
   }) 
   
   eu_case_hotspot <-reactive({
-    cases_hotspot_visuals(eu) +
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, eu) +
       labs(title = "EU Covid Case Hotspots")
   }) 
   
   asia_case_hotspot <-reactive({
-    cases_hotspot_visuals(asia)+
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, asia)+
       labs(title = "Asia Covid Case Hotspots")
   }) 
   
   latam_case_hotspot <-reactive({
-    cases_hotspot_visuals(latam) +
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, latam) +
       labs(title = "Latam Covid Case Hotspots")
   }) 
   
   global_case_hotspot <-reactive({
-    cases_hotspot_visuals("global") +
+    cases_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, "global") +
       labs(title = "Top 20 Global Covid Case Hotspots")
   }) 
   
   em_death_hotspot <-reactive({
-    death_hotspot_visuals(em) +
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, em) +
       labs(title = "EM Covid Death Hotspots")
   }) 
   
   dm_death_hotspot <-reactive({
-    death_hotspot_visuals(dm) +
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, dm) +
       labs(title = "DM Covid Death Hotpots")
   }) 
   
   eu_death_hotspot <-reactive({
-    death_hotspot_visuals(eu) +
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, eu) +
       labs(title = "EU Covid Death Hotspots")
   }) 
   
   asia_death_hotspot <-reactive({
-    death_hotspot_visuals(asia)+
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, asia)+
       labs(title = "Asia Covid Death Hotspots")
   }) 
   
   latam_death_hotspot <-reactive({
-    death_hotspot_visuals(latam) +
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, latam) +
       labs(title = "Latam Covid Death Hotspots")
   }) 
   
   global_death_hotspot <-reactive({
     
-    death_hotspot_visuals("global") +
+    death_hotspot_visuals( increases_in_deaths_and_cases_within_this_week, "global") +
       labs(title = "Top 20 Global Covid Death Hotspots")
     
   })
   
   
   output$hotspots <- renderPlot({
-    
-    increases_in_deaths_and_cases_within_this_week <-  
-      read_sheet(ss= "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU") %>% 
-      mutate(date = as.Date(date))
     
     if (input$type =="deaths") {
       
@@ -132,11 +143,8 @@ server <- function(input, output) {
   })
   
   regional_covid_cases <- reactive({
-    region_covid_data <- 
-      read_sheet("https://docs.google.com/spreadsheets/d/1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM/edit") %>% 
-      mutate(date = as.Date(date))
-    
-    
+
+  
     region_covid_data %>%
       select(date,continent, new_cases_avg_per_pop) %>%
       mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
@@ -202,18 +210,6 @@ server <- function(input, output) {
     
   })
   
-  #reading in latest cleaned covid data separately to speed up the process
-  cntry_cleaned_covid_2022_onward <- list()
-  for (i in seq(1:month(today()))) {
-    
-    data <-
-      read_sheet(ss= "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg", 
-                 sheet = paste0("cntry_cleaned_covid_",i)) %>% 
-      mutate(date = as.Date(date))
-    
-    cntry_cleaned_covid_2022_onward <- bind_rows( cntry_cleaned_covid_2022_onward, data)
-  }
-  
   
   #country covid case and death ranking bars by region ------------------------
   
@@ -223,26 +219,26 @@ server <- function(input, output) {
     
     if (input$region =="em") {
       
-      grid.arrange(top_5_country_ranked_by_cases(em), top_5_country_ranked_by_deaths(em),
+      grid.arrange(top_5_country_ranked_by_cases(cntry_cleaned_covid_2022_onwards, em), top_5_country_ranked_by_deaths(cntry_cleaned_covid_2022_onwards, em),
                    nrow = 1)
       
     } else if (input$region == "dm") {
       
-      grid.arrange(top_5_country_ranked_by_cases(dm), top_5_country_ranked_by_deaths(dm),
+      grid.arrange(top_5_country_ranked_by_cases(cntry_cleaned_covid_2022_onwards, dm), top_5_country_ranked_by_deaths(cntry_cleaned_covid_2022_onwards, dm),
                    nrow = 1)
       
     } else if (input$region == "latam") {
       
-      grid.arrange(top_5_country_ranked_by_cases(latam), top_5_country_ranked_by_deaths(latam),
+      grid.arrange(top_5_country_ranked_by_cases(cntry_cleaned_covid_2022_onwards, latam), top_5_country_ranked_by_deaths(cntry_cleaned_covid_2022_onwards, latam),
                    nrow = 1)
     } else if (input$region == "asia") {
       
-      grid.arrange(top_5_country_ranked_by_cases(asia), top_5_country_ranked_by_deaths(asia),
+      grid.arrange(top_5_country_ranked_by_cases(cntry_cleaned_covid_2022_onwards, asia), top_5_country_ranked_by_deaths(cntry_cleaned_covid_2022_onwards, asia),
                    nrow = 1)
       
     } else {
       
-      grid.arrange(top_5_country_ranked_by_cases(eu), top_5_country_ranked_by_deaths(eu),
+      grid.arrange(top_5_country_ranked_by_cases(cntry_cleaned_covid_2022_onwards, eu), top_5_country_ranked_by_deaths(cntry_cleaned_covid_2022_onwards, eu),
                    nrow = 1)
       
     }
@@ -252,39 +248,52 @@ server <- function(input, output) {
   
   #mobility average charts
   
+
+  
   output$mobility_throughout_the_years <-  renderPlot({
     
-    #reading in latest cleaned covid data separately to speed up the process
-    cntry_cleaned_mobility_2022_onwards <- list()
-    for (i in seq(1:month(today()))) {
-      
-      data <-
-        read_sheet(ss= "1IBoGqC30KEVqFM3z2N6gOqvxeZMkyWDfsOGLqjX-iSE", 
-                   sheet = paste0("cntry_cleaned_mobility_",i)) %>% 
-        mutate(date = as.Date(date))
-      
-      cntry_cleaned_mobility_2022_onwards <- bind_rows(cntry_cleaned_mobility_2022_onwards, data)
-    }
+    #reference values for y-axis on mobility charts
+    y_axis_min_max_reference_data_full <- 
+      cntry_cleaned_mobility %>%
+      filter(country == input$country) %>% 
+      filter(!is.na(roll_index)) %>% 
+      mutate(roll_index = 100+roll_index) %>% 
+      select(roll_index)
     
+    y_axis_min_max_reference_data <- 
+      cntry_cleaned_mobility_2022_onwards %>%
+      filter(country == input$country) %>% 
+      filter(!is.na(roll_index)) %>% 
+      mutate(roll_index = 100+roll_index) %>% 
+      select(roll_index)
+  
     
-    year_1 <- mobility_case_chart(cntry_cleaned_mobility %>%
+    year_1 <- mobility_case_chart(mobility_and_case_speed_data %>%
                                     filter(country == input$country) %>% 
                                     filter(date < "2021-01-01"), input$country) +
-      labs(caption = "@ou_estelle")
+      labs(caption = "@ou_estelle") +
+      scale_y_continuous(lim = c(min(y_axis_min_max_reference_data_full$roll_index), 
+                                 ifelse(max(y_axis_min_max_reference_data_full$roll_index)>100,
+                                        max(y_axis_min_max_reference_data_full$roll_index), 101)))
     
-    year_2 <- mobility_case_chart(cntry_cleaned_mobility %>%
+    year_2 <- mobility_case_chart(mobility_and_case_speed_data%>%
                                     filter(country == input$country) %>% 
                                     filter(date >= "2021-01-01") %>% 
-                                    filter(date < "2022-01-01"), input$country)
+                                    filter(date < "2022-01-01"), input$country) +
+      scale_y_continuous(lim = c(min(y_axis_min_max_reference_data_full$roll_index), 
+                                 ifelse(max(y_axis_min_max_reference_data_full$roll_index)>100,
+                                        max(y_axis_min_max_reference_data_full$roll_index), 101)))
     
-    
-    year_3<- mobility_case_chart(cntry_cleaned_mobility_2022_onwards %>%
+    year_3<- mobility_case_chart(mobility_and_case_speed_data_2022_onwards %>%
                                    filter(country == input$country) %>% 
                                    filter(date >= "2022-01-01") %>% 
                                    filter(date < "2023-01-01"), input$country) +
       labs(
         title = "Red refers to when average daily covid cases are rising", 
         subtitle = "Grey refers to when average daily covid cases are falling") +
+      scale_y_continuous(lim = c(min(y_axis_min_max_reference_data_full$roll_index), 
+                                 ifelse(max(y_axis_min_max_reference_data$roll_index)>100,
+                                        max(y_axis_min_max_reference_data$roll_index), 101)))+
       theme(plot.margin = margin(0.2, 0.5, 0.2, 0.5, "cm"), 
             plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
                                       face = "bold",
@@ -321,7 +330,7 @@ server <- function(input, output) {
 }
 
 #generate dropdown selection for average mobility charts    
-
+cntry_cleaned_mobility <- read_csv("cleaned_data/cntry_cleaned_mobility.csv")
 country_list <- as.list(unique(cntry_cleaned_mobility$country))
 
 #start of UI file 

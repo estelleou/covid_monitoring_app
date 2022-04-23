@@ -1,11 +1,11 @@
 #functions for manupulating data -------------------
 
-hotspot <- function(region, ranking_type) {
+hotspot <- function(data_set, region, ranking_type) {
   
   if (ranking_type=="deaths") {
     
     hotspot <- 
-      increases_in_deaths_and_cases_within_this_week %>%
+      data_set %>%
       filter(date == last(date)) %>%  
       arrange(desc(avg_chg_weeklydeaths)) 
     
@@ -25,7 +25,7 @@ hotspot <- function(region, ranking_type) {
   } else { 
     
     hotspot <- 
-      increases_in_deaths_and_cases_within_this_week %>%
+      data_set %>%
       filter(date == last(date)) %>%  
       arrange(desc(avg_chg_weeklycases)) 
     
@@ -49,10 +49,10 @@ hotspot <- function(region, ranking_type) {
 
 
 #visual ranking of hotspots
-cases_hotspot_visuals <- function(region) {
+cases_hotspot_visuals <- function(data_set, region) {
   
   ranked_data <- 
-    hotspot(region, "cases") %>% 
+    hotspot(data_set, region, "cases") %>% 
     select(country, avg_chg_weeklycases) 
   
   ranked_list <- 
@@ -90,10 +90,10 @@ cases_hotspot_visuals <- function(region) {
 }
 
 #visual ranking of hotspots
-death_hotspot_visuals <- function(region) {
+death_hotspot_visuals <- function(data_set, region) {
   
   ranked_data <- 
-    hotspot(region, "deaths") %>% 
+    hotspot(data_set, region, "deaths") %>% 
     select(country, avg_chg_weeklydeaths) 
   
   ranked_list <- 
@@ -134,9 +134,9 @@ death_hotspot_visuals <- function(region) {
 #country cases and death time-series charts by region -------------------------
 
 
-top_5_country_ranked_by_cases <- function(region){
+top_5_country_ranked_by_cases <- function(data, region){
   ranked_data <-
-    cntry_cleaned_covid %>%
+    data %>%
     filter(country %in% region) %>%
     filter(date == last(date)) %>%
     group_by(new_cases_avg_per_pop,country) %>%
@@ -147,7 +147,7 @@ top_5_country_ranked_by_cases <- function(region){
   ranked_list <-
     unique(ranked_data$country)
   
-  cntry_cleaned_covid %>% 
+  data%>% 
     filter(country %in% ranked_list) %>% 
     filter(country != "NA") %>% 
     ggplot()+ 
@@ -174,9 +174,10 @@ top_5_country_ranked_by_cases <- function(region){
 }
 
 
-top_5_country_ranked_by_deaths <- function(region){
+top_5_country_ranked_by_deaths <- function(data, region){
+  
   ranked_data <-
-    cntry_cleaned_covid %>%
+    data %>%
     select(date, country, new_deaths_avg_per_pop) %>% 
     filter(country %in% region) %>%
     filter(date == last(date)) %>%
@@ -188,7 +189,7 @@ top_5_country_ranked_by_deaths <- function(region){
   ranked_list <-
     unique(ranked_data$country)
   
-  cntry_cleaned_covid %>% 
+  data%>% 
     filter(country %in% ranked_list) %>% 
     filter(country != "NA") %>% 
     ggplot()+ 
@@ -219,31 +220,16 @@ top_5_country_ranked_by_deaths <- function(region){
 
  mobility_case_chart<- function(data, country_name) {
   
-     
-  mobility_and_case_speed_data <- 
-     data %>% 
-    mutate(x_axis_date = update(date, year = 1)) %>% 
-    mutate(roll_index = 100+roll_index) %>% 
-    left_join(increases_in_deaths_and_cases_within_this_week)
-    
   
   acceleration <- 
-    mobility_and_case_speed_data %>% 
+    data %>% 
     select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
     mutate(roll_index_1 = ifelse(avg_chg_weeklycases>=0, roll_index, 0))
   
   deceleration <- 
-    mobility_and_case_speed_data %>% 
+    data %>% 
     select(date, x_axis_date, roll_index, avg_chg_weeklycases) %>% 
     mutate(roll_index_2 = ifelse(avg_chg_weeklycases<=0, roll_index, 0))
-    
-  #reference values for y-axis
-  y_axis_min_max_reference_data <- 
-    cntry_cleaned_mobility %>% 
-    filter(country == country_name) %>% 
-    filter(!is.na(roll_index)) %>% 
-    mutate(roll_index = 100+roll_index) %>% 
-    select(roll_index)
   
   
     ggplot()+
@@ -256,19 +242,16 @@ top_5_country_ranked_by_deaths <- function(region){
     scale_x_date(lim = c(as.Date("0000-12-31"), as.Date("0001-12-31")),
                  date_label = "%b", 
                  date_breaks = "2 months") +
-    geom_hline(yintercept = 100, linetype = 2) +
-    theme_classic() +
-    labs(x = paste0(year(mobility_and_case_speed_data$date)), 
-         y = "")+
-    scale_y_continuous(lim = c(min(y_axis_min_max_reference_data$roll_index), 
-                               ifelse(max(y_axis_min_max_reference_data$roll_index)>100,
-                                      max(y_axis_min_max_reference_data$roll_index), 101)))+
-    estelle_theme() +
-    theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
-          plot.title = element_text(size = 16, vjust = -1),
-          plot.subtitle = element_text(size = 16, vjust = -1),
-          axis.text = element_text(size = 16), 
-          axis.title = element_text(size = 16))
+      geom_hline(yintercept = 100, linetype = 2) +
+      theme_classic() +
+      labs(x = paste0(year(data$date)), 
+           y = "") +
+      estelle_theme() +
+      theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
+            plot.title = element_text(size = 16, vjust = -1),
+            plot.subtitle = element_text(size = 16, vjust = -1),
+            axis.text = element_text(size = 16), 
+            axis.title = element_text(size = 16))
  }
  
  

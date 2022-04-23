@@ -64,6 +64,8 @@ for (i in seq(1:month(today()))) {
   
 }
 
+write_csv(cntry_cleaned_mobility_2022_onwards, "cleaned_data/cntry_cleaned_mobility_2022_onwards.csv")
+
 #COVID data cleaning 
 cntry_cleaned_covid <-
   covid_data %>% 
@@ -87,19 +89,12 @@ cntry_cleaned_covid <-
 #data loaded into initial app publication
 # write_csv(cntry_cleaned_covid, "cleaned_data/cntry_cleaned_covid.csv")
 
-#creating separate/smaller data for uploading to website
-for (i in seq(1:month(today()))) {
   
   cntry_cleaned_covid_2022_onward <- 
   cntry_cleaned_covid %>% 
-    filter(date > today()-368) %>% 
-    filter(date >= ymd(paste0("2022-", i,"-01"))) %>% 
-    filter(date < ymd(paste0("2022-", i+1, "-01" )))
+    filter(date > today()-365) 
   
-  sheet_write(cntry_cleaned_covid_2022_onward, ss = "1TpumENzcZE1r60Y4uqn6UWjk5_92u0iK1ZIM_H0G9Pg", 
-              sheet = paste0("cntry_cleaned_covid_",i))
-  
-}
+write_csv(cntry_cleaned_covid_2022_onward, "cleaned_data/cntry_cleaned_covid_2022_onward.csv")
 
 #data set of speed of cases and deaths --------------------------------------
 increases_in_deaths_and_cases_within_this_week <- 
@@ -110,12 +105,32 @@ increases_in_deaths_and_cases_within_this_week <-
          avg_chg_weeklycases = rollmean(change_7day_avg_new_cases_per_pop, k = 14, align = "right", fill = NA),
          avg_chg_weeklydeaths = rollmean(change_7day_avg_new_deaths_per_pop, k = 14, align = "right", fill = NA),) %>% 
   ungroup() %>% 
-  filter(date > today() - 3) %>% 
+  select(date, country, avg_chg_weeklycases, avg_chg_weeklydeaths)
+
+increases_in_deaths_and_cases_within_this_week_2022_onward <- 
+  filter(date > "2021-12-31") %>% 
   select(date, country, avg_chg_weeklycases, avg_chg_weeklydeaths)
 
 write_sheet(data = increases_in_deaths_and_cases_within_this_week, ss = "1iRB35-thoroWHQzMv2Sbx4LxOKR7_8Gb8ExkpBtgGhU", 
             sheet = "increases_in_deaths_and_cases_within_this_week")
 
+write_csv(increases_in_deaths_and_cases_within_this_week_2022_onward, "cleaned_data/increases_in_deaths_and_cases_within_this_week")
+
+#mobility and case speed data set ----------------------------------------------
+
+mobility_and_case_speed_data <- 
+  cntry_cleaned_mobility %>%
+  mutate(x_axis_date = update(date, year = 1)) %>% 
+  mutate(roll_index = 100+roll_index) %>% 
+  left_join(increases_in_deaths_and_cases_within_this_week)
+
+mobility_and_case_speed_data_2022_onwards <- 
+  mobility_and_case_speed_data %>% 
+  filter(date > "2021-12-31")
+
+write_csv(mobility_and_case_speed_data, "cleaned_data/mobility_and_case_speed_data.csv")
+
+write_csv(mobility_and_case_speed_data_2022_onwards, "cleaned_data/mobility_and_case_speed_2022_onwards.csv")
 
 #regional covid cases data set ------------------------------------------------
   
@@ -180,7 +195,7 @@ region_covid_data <-
 
 sheet_write(region_covid_data , ss = "1haO-gWx9msdunNKIyfzSthJc5pCEbYurM4J2SXKX_BM",
             sheet = "region_covid_data")
-
+write_csv(region_covid_data, "cleaned_data/region_covid_data.csv")
 
 log_close()
 writeLines(readLines(lf))
