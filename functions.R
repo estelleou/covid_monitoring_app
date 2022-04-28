@@ -82,10 +82,10 @@ cases_hotspot_visuals <- function(data_set, region) {
     theme_bw()+
     theme(
       plot.margin = margin(0, 1, 0.5, 1, unit = "cm"),
-      plot.subtitle= element_text(size = 14),
-      plot.title = element_text(size = 14),
-      axis.text = element_text(face = "bold", size = 14),
-      axis.text.y = element_text(face = "bold", size = 14,
+      plot.subtitle= element_text(size = 10),
+      plot.title = element_text(size = 12),
+      axis.text = element_text(face = "bold", size = 12),
+      axis.text.y = element_text(face = "bold", size = 12,
                                  color = as.vector((rev(ifelse(ranked_data$avg_chg_weeklycases >= 0, "red", "black"))))))
 }
 
@@ -123,10 +123,10 @@ death_hotspot_visuals <- function(data_set, region) {
     theme_bw()+
     theme(
       plot.margin = margin(0, 1, 0.5, 1, unit = "cm"),
-      plot.subtitle= element_text(size = 14),
-      plot.title = element_text(size = 14),
-      axis.text = element_text(face = "bold", size = 14),
-      axis.text.y = element_text(face = "bold", size = 14,
+      plot.subtitle= element_text(size = 10),
+      plot.title = element_text(size = 12),
+      axis.text = element_text(face = "bold", size = 12),
+      axis.text.y = element_text(face = "bold", size = 12,
                                  color = as.vector((rev(ifelse(ranked_data$avg_chg_weeklydeaths >= 0, "red", "black"))))))
 }
 
@@ -166,8 +166,8 @@ top_5_country_ranked_by_cases <- function(data, region){
     scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
                                    "#cc9900", "#006633"))+
     theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"), 
-          plot.title = element_text(size = 20, vjust = -1, color = "black"),
-          plot.subtitle = element_text(size = 20),
+          plot.title = element_text(size = 15, vjust = -1, color = "black"),
+          plot.subtitle = element_text(size = 15),
           legend.position = "none") +
     coord_cartesian(clip = "off")
   
@@ -208,8 +208,8 @@ top_5_country_ranked_by_deaths <- function(data, region){
     scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
                                    "#cc9900", "#006633"))+
     theme(plot.margin = margin(0.1, 3, 0, 0, "cm"), 
-          plot.title = element_text(size = 20, vjust = -1, color = "black"),
-          plot.subtitle = element_text(size = 20),
+          plot.title = element_text(size = 15, vjust = -1, color = "black"),
+          plot.subtitle = element_text(size = 15),
           legend.position = "none") +
     coord_cartesian(clip = "off")
   
@@ -248,10 +248,10 @@ top_5_country_ranked_by_deaths <- function(data, region){
            y = "") +
       estelle_theme() +
       theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"), 
-            plot.title = element_text(size = 16, vjust = -1),
-            plot.subtitle = element_text(size = 16, vjust = -1),
-            axis.text = element_text(size = 16), 
-            axis.title = element_text(size = 16))
+            plot.title = element_text(size = 13, vjust = -1),
+            plot.subtitle = element_text(size = 13, vjust = -1),
+            axis.text = element_text(size = 13), 
+            axis.title = element_text(size = 13))
  }
  
  
@@ -297,16 +297,16 @@ top_5_country_ranked_by_deaths <- function(data, region){
    scale_fill_manual(values  = c("#cc9900", "#003333"))+
    estelle_theme() +
    theme(plot.margin = margin(0.5, 0.2, 0.5, 0.2, "cm"), 
-         plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
+         plot.title = element_text(size = 13, vjust = -1, color = "#993333", 
                                    face = "bold",
                                    margin = margin(0,0,0.3,0, "cm")),
-         legend.text = element_text(size = 16),
-         plot.subtitle = element_text(size = 15, vjust = -1, color = "#778088",
+         legend.text = element_text(size = 13),
+         plot.subtitle = element_text(size = 12, vjust = -1, color = "#778088",
                                       face = "bold",
                                       margin = margin(0,0,0.5,0, "cm")),
-         axis.text = element_text(size = 16),
+         axis.text = element_text(size = 13),
          axis.text.x = element_text(angle = 45, hjust = 1),
-         axis.title = element_text(size = 16), 
+         axis.title = element_text(size = 13), 
          legend.position = "top") +
    guides(fill = guide_legend(nrow = 1))
    
@@ -350,16 +350,16 @@ top_5_country_ranked_by_deaths <- function(data, region){
     scale_fill_manual(values  = c("#006633", "#0099cc"))+
     estelle_theme() +
     theme(plot.margin = margin(0.5, 0.2, 0.5, 0.2, "cm"), 
-          plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
+          plot.title = element_text(size = 13, vjust = -1, color = "#993333", 
                                     face = "bold",
                                     margin = margin(0,0,0.3,0, "cm")),
-          legend.text = element_text(size = 16),
-          plot.subtitle = element_text(size = 16, vjust = -1, color = "#778088",
+          legend.text = element_text(size = 13),
+          plot.subtitle = element_text(size = 13, vjust = -1, color = "#778088",
                                        face = "bold",
                                        margin = margin(0,0,0.5,0, "cm")),
-          axis.text = element_text(size = 16),
+          axis.text = element_text(size = 13),
           axis.text.x = element_text(angle = 45, hjust = 1),
-          axis.title = element_text(size = 16), 
+          axis.title = element_text(size = 13), 
           legend.position = "top") +
     guides(fill = guide_legend(nrow = 1))
 }

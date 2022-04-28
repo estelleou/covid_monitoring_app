@@ -21,29 +21,30 @@ source("estelle_theme.R")
 #loading in functions for manupulating data
 source("functions.R")
 
-#load updated data
-#reading in latest cleaned covid data separately to speed up the process
-cntry_cleaned_mobility_2022_onwards <-
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_mobility_2022_onwards.csv?token=GHSAT0AAAAAABSOFOUAUTFAHTOVWB4OMKEAYTD53BQ"))
-
-cntry_cleaned_covid_2022_onwards <- 
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_covid_2022_onward.csv"))
-
-increases_in_deaths_and_cases_within_this_week <-  
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/increases_in_deaths_and_cases_within_this_week"))
-
-mobility_and_case_speed_data_2022_onwards <-  
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_2022_onwards.csv"))
-
-region_covid_data <- 
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv"))
-
-mobility_and_case_speed_data <- 
-  read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_data.csv"))
 
 #reactive output ---------------------------------------------------------
 
 server <- function(input, output) {
+  
+  #load updated data
+  #reading in latest cleaned covid data separately to speed up the process
+  cntry_cleaned_mobility_2022_onwards <-
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_mobility_2022_onwards.csv?token=GHSAT0AAAAAABSOFOUAUTFAHTOVWB4OMKEAYTD53BQ"))
+  
+  cntry_cleaned_covid_2022_onwards <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/cntry_cleaned_covid_2022_onward.csv"))
+  
+  increases_in_deaths_and_cases_within_this_week <-  
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/increases_in_deaths_and_cases_within_this_week"))
+  
+  mobility_and_case_speed_data_2022_onwards <-  
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_2022_onwards.csv"))
+  
+  region_covid_data <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/region_covid_data.csv"))
+  
+  mobility_and_case_speed_data <- 
+    read_csv(url("https://raw.githubusercontent.com/estelleou/covid_monitoring_app/main/cleaned_data/mobility_and_case_speed_data.csv"))
 
   #hotspots charts ---------------------------------------------------------  
   
@@ -165,8 +166,8 @@ server <- function(input, output) {
       scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
                                      "#cc9900", "#006633"))+
       theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
-            plot.title = element_text(size = 20, vjust = -1, color = "black"),
-            plot.subtitle = element_text(size = 20),
+            plot.title = element_text(size = 15, vjust = -1, color = "black"),
+            plot.subtitle = element_text(size = 15),
             legend.position = "none")+
       coord_cartesian(clip = "off")
     
@@ -195,8 +196,8 @@ server <- function(input, output) {
       scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
                                      "#cc9900", "#006633"))+
       theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
-            plot.title = element_text(size = 20, vjust = -1, color = "black"),
-            plot.subtitle = element_text(size = 20),
+            plot.title = element_text(size = 15, vjust = -1, color = "black"),
+            plot.subtitle = element_text(size = 15),
             legend.position = "none")+
       coord_cartesian(clip = "off")
     
@@ -294,12 +295,12 @@ server <- function(input, output) {
                                  ifelse(max(y_axis_min_max_reference_data$roll_index)>100,
                                         max(y_axis_min_max_reference_data$roll_index), 101)))+
       theme(plot.margin = margin(0.2, 0.5, 0.2, 0.5, "cm"), 
-            plot.title = element_text(size = 16, vjust = -1, color = "#993333", 
+            plot.title = element_text(size = 13, vjust = -1, color = "#993333", 
                                       face = "bold",
                                       margin = margin(0,0,0.3,0, "cm")),
-            plot.subtitle = element_text(size = 16, vjust = -1, color = "#778088",
+            plot.subtitle = element_text(size = 13, vjust = -1, color = "#778088",
                                          face = "bold",
-                                         margin = margin(0,0,0.5,0, "cm")))
+                                         margin = margin(0,0,0.2,0, "cm")))
     
     
     weekday <-weekday_mobility(cntry_cleaned_mobility_2022_onwards %>%
@@ -315,11 +316,11 @@ server <- function(input, output) {
                                        c(3,  NA, NA)),
                  top = textGrob(paste0( "Average Mobility* (% of Jan-Feb 2020 levels) as of ", format(max(cntry_cleaned_mobility_2022_onwards$date),
                                                                                                       "%B-%d")),
-                                gp = gpar(fontface = 4, fontsize = 18),
+                                gp = gpar(fontface = 4, fontsize =15),
                                 x = 0.2),
                  bottom = textGrob(
                    "*Average Mobility in Recreational, Retail, Transit and Office Spaces with (+) residential activity calculated as a drag on overall mobility \nSource: JHU and Google Mobility Data",
-                   gp = gpar(fontface = 3, fontsize = 15), 
+                   gp = gpar(fontface = 3, fontsize = 11), 
                    x = 0.7
                  ))
     
@@ -339,7 +340,7 @@ ui <-  shinyUI(fluidPage(
   theme = shinythemes::shinytheme("flatly"),
   
   # App title ----
-  titlePanel("Covid Macro Monitor"),
+  h1(id = "big heading", "Covid Macro Monitor", style =  "font-size: 100%"),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -348,14 +349,14 @@ ui <-  shinyUI(fluidPage(
     sidebarPanel(
       
       # Input:  ----
-      tags$style(type='text/css', ".selectize-input { font-size: 18px; line-height: 18px;} 
-                 .selectize-dropdown { font-size: 18px; line-height: 18px; }
-                 .label {font-size: 19px; line-height: 19px"),
+      tags$style(type='text/css', ".selectize-input { font-size: 100%; line-height: 75%;} 
+                 .selectize-dropdown { font-size: 100%; line-height: 75%; }
+                 .label {font-size: 100%; line-height: 75%"),
       selectInput(inputId = "type",
                   label = "Covid Metric",
                   list(`Cases` = "cases", `Death` = "deaths")
       ),
-      width = 1
+      width = 2
       
     ),
     
@@ -363,12 +364,12 @@ ui <-  shinyUI(fluidPage(
     mainPanel(
       
       # Output: Hotspots and Regional----
-      h1("Covid Hotspots For the Week In Red: "),
+      h1("Covid Hotspots For the Week In Red: ", style ="font-size: 100%;" ),
       plotOutput(outputId = "hotspots", width = "100%", height = "850px"),
       hr(),
-      h1("Regional Covid Case and Death Levels"),
+      h1("Regional Covid Case and Death Levels", style ="font-size: 100%;" ),
       plotOutput(outputId = "regional_ts", width = "100%", height = "650px"),
-      width = 11,
+      width = 10,
     )
   ),
   
@@ -378,7 +379,7 @@ ui <-  shinyUI(fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       
-      # Input: Slider for the number of bins ----
+      # Input: options----
       selectInput(inputId = "region",
                   label = "Pick A Country Grouping",
                   list(`Emerging Markets` = "em", `Developed Markets` = "dm",
@@ -394,7 +395,7 @@ ui <-  shinyUI(fluidPage(
       
       # Output: Country level by region----
       hr(),
-      h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within Country Grouping"),
+      h1("Top 5 Countries with the Highest Cases/Deaths Per Capita within Country Grouping", style ="font-size: 100%;" ),
       plotOutput(outputId = "covid_rankings", width = "100%", height = "550px"),
       width = 10,
     )
@@ -420,7 +421,7 @@ ui <-  shinyUI(fluidPage(
       
       # Output: Country level by region----
       hr(),
-      h1("Mobility Indicators"),
+      h1("Mobility Indicators", style ="font-size: 100%;" ),
       plotOutput(outputId = "mobility_throughout_the_years", width = "100%",height = "800px"),
       width = 10,
     )
