@@ -130,6 +130,86 @@ death_hotspot_visuals <- function(data_set, region) {
                                  color = as.vector((rev(ifelse(ranked_data$avg_chg_weeklydeaths >= 0, "red", "black"))))))
 }
 
+#region plots -------------------------------------------------------------------------
+
+regional_covid_cases <- function (data) {
+  
+  last_region <- 
+  data %>%
+    filter(!is.na(continent)) %>%
+    filter(continent != "Oceania") %>%
+    filter(date == last(date)) %>% 
+    ungroup()
+  
+  
+  data %>%
+    select(date,continent, new_cases_avg_per_pop) %>%
+    filter(continent != "Oceania") %>%
+    mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa")))) %>%
+    filter(!is.na(new_cases_avg_per_pop)) %>% 
+    ggplot() +
+    geom_line(aes(x = date, y = new_cases_avg_per_pop, color = continent), size = 1.2) +
+    geom_dl(data = last_region,
+            aes(x = date, y = new_cases_avg_per_pop, color = continent, label = continent),
+            method = list('last.bumpup', cex = 1.2, hjust = 0, 
+                          vjust = 1, fontface = "bold"))+
+    labs(x = "", y = "",
+         title= "Daily New Covid Cases per million (7-day avg.)",
+         subtitle = paste0("As of ", today()-1)) +
+    scale_x_date(lim = c(today()-765,
+                         today()),  
+                 date_label = "%b %y", 
+                 date_breaks = "3 months") +
+    estelle_theme()+
+    scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
+                                   "#cc9900", "#006633"))+
+    theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
+          plot.title = element_text(size = 15, vjust = -1, color = "black"),
+          plot.subtitle = element_text(size = 15),
+          legend.position = "none")+
+    coord_cartesian(clip = "off")
+  
+}
+
+regional_covid_deaths <- function (data) {
+  
+  last_region <- 
+    data %>%
+    filter(!is.na(continent)) %>%
+    filter(continent != "Oceania") %>%
+    filter(date == last(date)) %>% 
+    ungroup()
+  
+  
+  data %>%
+    select(date,continent, new_deaths_avg_per_pop) %>%
+    filter(continent != "Oceania") %>%
+    mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa")))) %>%
+    filter(!is.na(new_deaths_avg_per_pop)) %>% 
+    ggplot() +
+    geom_line(aes(x = date, y = new_deaths_avg_per_pop, color = continent), size = 1.2) +
+    geom_dl(data = last_region,
+            aes(x = date, y = new_deaths_avg_per_pop, color = continent, label = continent),
+            method = list('last.bumpup', cex = 1.2, hjust = 0, 
+                          vjust = 1, fontface = "bold"))+
+    labs(x = "", y = "",
+         title= "Daily New Covid Deaths per million (7-day avg.)",
+         subtitle = paste0("As of ", today()-1)) +
+    scale_x_date(lim = c(today()-765,
+                         today()),  
+                 date_label = "%b %y", 
+                 date_breaks = "3 months") +
+    estelle_theme()+
+    scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
+                                   "#cc9900", "#006633"))+
+    theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"), 
+          plot.title = element_text(size = 15, vjust = -1, color = "black"),
+          plot.subtitle = element_text(size = 15),
+          legend.position = "none") +
+    coord_cartesian(clip = "off")
+  
+}
+
 
 #country cases and death time-series charts by region -------------------------
 
@@ -141,7 +221,7 @@ top_5_country_ranked_by_cases <- function(data, region){
     filter(date == last(date)) %>%
     group_by(new_cases_avg_per_pop,country) %>%
     arrange(new_cases_avg_per_pop) %>%
-    ungroup() %>% 
+    ungroup() %>%
     slice_tail(n=5)
 
   ranked_list <-

@@ -135,77 +135,10 @@ server <- function(input, output) {
   
   
   #regional charts ----------------------------------------------------------
-  last_region <- reactive({
-    region_covid_data %>%
-      filter(!is.na(continent)) %>%
-      filter(continent != "Oceania") %>%
-      filter(date == today()-1)
-  })
-  
-  regional_covid_cases <- reactive({
-
-  
-    region_covid_data %>%
-      select(date,continent, new_cases_avg_per_pop) %>%
-      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
-      filter(continent != "Oceania") %>%
-      ggplot() +
-      geom_line(aes(x = date, y = new_cases_avg_per_pop, color = continent), size = 1.2) +
-      geom_dl(data = last_region(),
-              aes(x = date, y = new_cases_avg_per_pop, color = continent, label = continent),
-              method = list('last.bumpup', cex = 1.2, hjust = 0, 
-                            vjust = 1, fontface = "bold"))+
-      labs(x = "", y = "",
-           title= "Daily New Covid Cases per million (7-day avg.)",
-           subtitle = paste0("As of ", today()-1)) +
-      scale_x_date(lim = c(as.Date("2020-02-15"),
-                           as.Date(max(last_region()$date))),
-                   date_label = "%b %y",
-                   date_breaks = "3 months" ) +
-      estelle_theme()+
-      scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
-                                     "#cc9900", "#006633"))+
-      theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
-            plot.title = element_text(size = 15, vjust = -1, color = "black"),
-            plot.subtitle = element_text(size = 15),
-            legend.position = "none")+
-      coord_cartesian(clip = "off")
-    
-  })
-  
-  regional_covid_deaths <- reactive({
-    
-    region_covid_data %>%
-      select(date,continent, new_deaths_avg_per_pop) %>%
-      mutate(continent = (factor(continent, levels = c("North America", "Europe", "South America", "Asia","Africa", "Oceania")))) %>%
-      filter(continent != "Oceania") %>%
-      ggplot() +
-      geom_line(aes(x = date, y = new_deaths_avg_per_pop, color = continent), size = 1.2) +
-      geom_dl(data = last_region(),
-              aes(x = date, y = new_deaths_avg_per_pop, color = continent, label = continent),
-              method = list('last.bumpup', cex = 1.2, hjust = 0, 
-                            vjust = 1, fontface = "bold"))+
-      labs(x = "", y = "",
-           title= "Daily New Covid Deaths per million (7-day avg.)",
-           subtitle = paste0("As of ", today()-1)) +
-      scale_x_date(lim = c(as.Date("2020-02-15"),
-                           as.Date(max(last_region()$date))),
-                   date_label = "%b %y",
-                   date_breaks = "3 months" ) +
-      estelle_theme()+
-      scale_color_manual(values = c( "#0099cc", "#778088", "#832e31", 
-                                     "#cc9900", "#006633"))+
-      theme(plot.margin = margin(0.1, 3, 0.1, 0.1, "cm"),
-            plot.title = element_text(size = 15, vjust = -1, color = "black"),
-            plot.subtitle = element_text(size = 15),
-            legend.position = "none")+
-      coord_cartesian(clip = "off")
-    
-  })
   
   output$regional_ts <- renderPlot({
     
-    grid.arrange(regional_covid_cases(), regional_covid_deaths(),
+    grid.arrange(regional_covid_cases(region_covid_data), regional_covid_deaths(region_covid_data),
                  nrow = 1)
     
   })
@@ -215,7 +148,6 @@ server <- function(input, output) {
   
   output$covid_rankings <- renderPlot({
     
-
     
     if (input$region =="em") {
       
@@ -372,6 +304,7 @@ ui <-  shinyUI(fluidPage(
       width = 10,
     )
   ),
+  
   
   #Country Level Cases and Death Charts ---------------------------------
   sidebarLayout(
